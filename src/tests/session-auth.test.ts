@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createSession, getSession, destroySession } from '../auth/session';
-import { requireAuth, optionalAuth, getCurrentUserId } from '../middleware/authGuard';
+import { createSession, getSession, destroySession } from '../auth/session.js';
+import { requireAuth, optionalAuth, getCurrentUserId } from '../middleware/authGuard.js';
 
 // Mock Fastify request and reply objects
 const createMockRequest = (cookies: Record<string, string> = {}) => ({

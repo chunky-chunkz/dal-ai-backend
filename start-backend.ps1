@@ -3,7 +3,7 @@ Write-Host "Starting AI Backend with Auto-Restart..." -ForegroundColor Green
 Write-Host "Press Ctrl+C to stop completely" -ForegroundColor Yellow
 Write-Host ""
 
-$backendPath = "C:\development\dal-ki-1\backend\simple-ai-server.cjs"
+$backendPath = "C:\development\dal-ai-backend\simple-ai-server.cjs"
 
 while ($true) {
     try {

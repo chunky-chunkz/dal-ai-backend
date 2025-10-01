@@ -125,20 +125,25 @@ async function runRagDemo() {
 
   const streamStart = Date.now();
   let tokenCount = 0;
+  let streamedContent = '';
   
-  const streamResponse = await ragLocalAnswerStream(streamQuestion, 3, (chunk) => {
+  const streamResponse = ragLocalAnswerStream(streamQuestion, undefined, 3);
+  
+  streamResponse.onToken((chunk) => {
     process.stdout.write(chunk);
+    streamedContent += chunk;
     tokenCount++;
   });
 
+  const finalResult = await streamResponse.done();
   const streamTime = Date.now() - streamStart;
   
   console.log('\n\n📊 Stream Metrics:');
   console.log(`   Total Tokens: ${tokenCount}`);
   console.log(`   Stream Time: ${streamTime}ms`);
   console.log(`   Avg per Token: ${(streamTime / tokenCount).toFixed(1)}ms`);
-  console.log(`   Confidence: ${streamResponse.confidence.toFixed(3)}`);
-  console.log(`   Sources: ${streamResponse.sourceIds.join(', ')}`);
+  console.log(`   Confidence: ${finalResult.confidence.toFixed(3)}`);
+  console.log(`   Sources: ${finalResult.sourceIds.join(', ')}`);
 }
 
 // Performance benchmark

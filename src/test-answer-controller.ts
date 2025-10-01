@@ -57,7 +57,7 @@ async function testPostAnswer() {
       const isJson = response.headers.get('content-type')?.includes('application/json');
       
       if (isJson) {
-        const data = await response.json();
+        const data = await response.json() as any;
         
         console.log(`      Status: ${response.status}`);
         console.log(`      Response time: ${responseTime}ms`);
@@ -146,7 +146,7 @@ async function testStreamAnswer() {
           console.log('      ⏰ Stream timeout');
         }, 30000);
         
-        const reader = response.body?.getReader();
+        const reader = (response.body as unknown as ReadableStream<Uint8Array>)?.getReader();
         if (!reader) {
           console.log('      ❌ Could not get stream reader');
           continue;
@@ -240,7 +240,7 @@ async function testInvalidStreamRequests() {
       console.log(`   ❌ ${testCase.name}`);
       
       const response = await fetch(testCase.url);
-      const data = await response.json();
+      const data = await response.json() as any;
       
       console.log(`      Status: ${response.status}`);
       console.log(`      Error: ${data.error || 'No error message'}`);

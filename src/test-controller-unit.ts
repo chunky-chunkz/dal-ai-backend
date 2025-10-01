@@ -5,9 +5,9 @@
 
 import { z } from 'zod';
 
-// Mock the answer service
-const mockAnswerService = {
-  answerQuestion: async (question: string) => {
+// Mock the answer service (unused in current implementation)
+// const mockAnswerService = {
+/*  answerQuestion: async (question: string) => {
     return {
       answer: `Mocked answer for: ${question}`,
       confidence: 0.85,
@@ -29,7 +29,7 @@ const mockAnswerService = {
       timestamp: new Date().toISOString()
     };
   }
-};
+}; */
 
 // Mock Fastify request/reply objects
 function createMockRequest(body?: any, query?: any) {
@@ -37,7 +37,7 @@ function createMockRequest(body?: any, query?: any) {
     body,
     query,
     raw: {
-      on: (event: string, callback: () => void) => {
+      on: (event: string, _callback: () => void) => {
         // Mock event handlers for client disconnect
         if (event === 'close' || event === 'aborted') {
           // Don't call callback immediately to simulate normal operation
@@ -49,7 +49,7 @@ function createMockRequest(body?: any, query?: any) {
 
 function createMockReply() {
   const response: any = {
-    status: (code: number) => response,
+    status: (_code: number) => response,
     send: async (data: any) => {
       console.log(`Response ${response._statusCode || 200}:`, JSON.stringify(data, null, 2));
       return response;

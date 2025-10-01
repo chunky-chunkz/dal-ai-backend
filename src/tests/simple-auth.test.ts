@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { createSession, getSession } from '../auth/session';
-import { requireAuth } from '../middleware/authGuard';
+import { createSession, getSession } from '../auth/session.js';
+import { requireAuth } from '../middleware/authGuard.js';
 
 describe('Simple Auth Test', () => {
   it('should work with basic session flow', async () => {

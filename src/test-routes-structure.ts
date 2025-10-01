@@ -13,18 +13,18 @@ async function testRouteImports() {
   
   try {
     // Test controller imports
-    const answerController = await import('./src/controllers/answer.controller.js');
+    const answerController = await import('./controllers/answer.controller.js');
     console.log('✅ Answer controller imported successfully');
-    console.log('   - handleAnswerRequest:', typeof answerController.handleAnswerRequest);
-    console.log('   - handleAnswerStreamRequest:', typeof answerController.handleAnswerStreamRequest);
+    console.log('   - postAnswer:', typeof answerController.postAnswer);
+    console.log('   - streamAnswer:', typeof answerController.streamAnswer);
     
     // Test route imports
-    const answerRoutes = await import('./src/routes/answer.routes.js');
+    const answerRoutes = await import('./routes/answer.routes.js');
     console.log('✅ Answer routes imported successfully');
     console.log('   - answerRoutes:', typeof answerRoutes.answerRoutes);
     
     // Test service imports
-    const answerService = await import('./src/services/answer.service.js');
+    const answerService = await import('./services/answer.service.js');
     console.log('✅ Answer service imported successfully');
     console.log('   - answerQuestion:', typeof answerService.answerQuestion);
     console.log('   - answerQuestionStream:', typeof answerService.answerQuestionStream);

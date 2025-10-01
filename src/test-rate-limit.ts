@@ -54,7 +54,7 @@ async function testRateLimit() {
     const request = createMockRequest(testIP, testEmail);
     const reply = createMockReply();
     
-    await authRateLimit(request, reply);
+    await authRateLimit(request, reply as any);
     
     if (reply.getStatusCode() === 429) {
       console.error(`❌ Request ${i} was rate limited unexpectedly`);
@@ -68,7 +68,7 @@ async function testRateLimit() {
   const request6 = createMockRequest(testIP, testEmail);
   const reply6 = createMockReply();
   
-  await authRateLimit(request6, reply6);
+  await authRateLimit(request6, reply6 as any);
   
   if (reply6.getStatusCode() === 429) {
     console.log('✅ Request 6: Rate limited (expected)');
@@ -93,7 +93,7 @@ async function testRateLimit() {
   const request7 = createMockRequest('192.168.1.101', testEmail);
   const reply7 = createMockReply();
   
-  await authRateLimit(request7, reply7);
+  await authRateLimit(request7, reply7 as any);
   
   if (reply7.getStatusCode() === 429) {
     console.error('❌ Different IP should not be rate limited');
@@ -105,7 +105,7 @@ async function testRateLimit() {
   const request8 = createMockRequest(testIP, 'different@example.com');
   const reply8 = createMockReply();
   
-  await authRateLimit(request8, reply8);
+  await authRateLimit(request8, reply8 as any);
   
   if (reply8.getStatusCode() === 429) {
     console.error('❌ Different email should not be rate limited');
@@ -119,7 +119,7 @@ async function testRateLimit() {
   const request9 = createMockRequest(testIP, testEmail);
   const reply9 = createMockReply();
   
-  await authRateLimit(request9, reply9);
+  await authRateLimit(request9, reply9 as any);
   
   if (reply9.getStatusCode() === 429) {
     console.error('❌ Reset should have cleared the rate limit');
@@ -135,7 +135,7 @@ async function testRateLimit() {
     const request = createMockRequest(testIP); // No email
     const reply = createMockReply();
     
-    await authRateLimit(request, reply);
+    await authRateLimit(request, reply as any);
     
     if (reply.getStatusCode() === 429) {
       console.error(`❌ Anonymous request ${i} was rate limited unexpectedly`);
@@ -147,7 +147,7 @@ async function testRateLimit() {
   const requestAnon6 = createMockRequest(testIP);
   const replyAnon6 = createMockReply();
   
-  await authRateLimit(requestAnon6, replyAnon6);
+  await authRateLimit(requestAnon6, replyAnon6 as any);
   
   if (replyAnon6.getStatusCode() === 429) {
     console.log('✅ Anonymous request 6: Rate limited (expected)');

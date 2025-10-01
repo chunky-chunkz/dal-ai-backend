@@ -328,7 +328,7 @@ export async function answerQuestionStream(
   question: string, 
   onToken: (chunk: string) => void,
   signal?: AbortSignal,
-  userId?: string
+  _userId?: string
 ): Promise<AnswerResponse> {
   try {
     // Validate input

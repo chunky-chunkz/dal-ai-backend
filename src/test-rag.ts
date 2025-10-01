@@ -51,15 +51,19 @@ async function testRagLocal() {
     console.log('🌊 Streaming response:');
 
     let streamedContent = '';
-    const streamResponse = await ragLocalAnswerStream(question4, 3, (chunk) => {
+    const streamResponse = ragLocalAnswerStream(question4, undefined, 3);
+    
+    streamResponse.onToken((chunk) => {
       process.stdout.write(chunk);
       streamedContent += chunk;
     });
 
+    const finalResult = await streamResponse.done();
+
     console.log('\n\n📊 Stream results:');
-    console.log('🎯 Confidence:', streamResponse.confidence.toFixed(3));
-    console.log('📚 Source IDs:', streamResponse.sourceIds);
-    console.log('✅ Streamed content matches final:', streamedContent.trim() === streamResponse.answer);
+    console.log('🎯 Confidence:', finalResult.confidence.toFixed(3));
+    console.log('📚 Source IDs:', finalResult.sourceIds);
+    console.log('✅ Streamed content matches final:', streamedContent.trim() === finalResult.answer);
 
     console.log('\n✅ All RAG tests completed successfully!');
 

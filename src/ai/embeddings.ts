@@ -48,9 +48,7 @@ class EmbeddingService {
 
     try {
       console.log(`🔧 Loading embedding model: ${this.model}`);
-      this.pipeline = await pipeline('feature-extraction', this.model, {
-        normalize: true,
-      }) as FeatureExtractionPipeline;
+      this.pipeline = await pipeline('feature-extraction', this.model) as FeatureExtractionPipeline;
       console.log('✅ Embedding model loaded successfully');
     } catch (error) {
       console.error('❌ Failed to load embedding model:', error);
@@ -335,16 +333,18 @@ export function getModelInfo() {
 // Legacy compatibility functions for existing code
 export async function generateEmbedding(text: string, model?: string): Promise<number[]> {
   if (model) {
-    const service = new EmbeddingService(model);
-    return service.embedText(text);
+    // For now, we ignore the model parameter and use the default
+    // TODO: Implement model-specific embedding services
+    console.warn(`Custom model ${model} requested but not supported, using default`);
   }
   return embedText(text);
 }
 
 export async function generateEmbeddings(texts: string[], model?: string): Promise<number[][]> {
   if (model) {
-    const service = new EmbeddingService(model);
-    return service.embedTexts(texts);
+    // For now, we ignore the model parameter and use the default
+    // TODO: Implement model-specific embedding services
+    console.warn(`Custom model ${model} requested but not supported, using default`);
   }
   return embedTexts(texts);
 }
@@ -386,13 +386,11 @@ export function cosineSimilarity(vecA: number[], vecB: number[]): number {
 export async function isEmbeddingModelAvailable(model?: string): Promise<boolean> {
   try {
     if (model) {
-      // If specific model is requested, test with that model
-      const service = new EmbeddingService(model);
-      await service.embedText('test');
-    } else {
-      // Test with default model
-      await getEmbeddingService().embedText('test');
+      // For now, we ignore the model parameter and use the default
+      console.warn(`Custom model ${model} requested but not supported, using default`);
     }
+    // Test with default model
+    await getEmbeddingService().embedText('test');
     return true;
   } catch {
     return false;

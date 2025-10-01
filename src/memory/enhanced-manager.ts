@@ -7,13 +7,12 @@
 
 import { detectPII } from './pii.js';
 import { extractCandidates } from './extractor.js';
-import { classifyRisk, canAutoSave, defaultTTL } from './policy.js';
-import { scoreCandidate } from './scorer.js';
+import { defaultTTL } from './policy.js';
 import { listByUser, upsert, type MemoryItem } from './store.js';
 import { MemoryCategorizerEnhanced, type EnhancedCandidate, type MemoryContext } from './enhanced-categorizer.js';
 import { MemoryConsolidator, type ConsolidationResult } from './consolidator.js';
 import { AdaptiveLearningSystem, type LearningData } from './adaptive-learning.js';
-import { detectTemporal, detectSentiment, extractNamedEntities } from './text-utils.js';
+import { detectSentiment, detectTemporal } from './text-utils.js';
 
 export interface EnhancedEvaluationResult {
   saved: EnhancedCandidate[];
@@ -157,7 +156,7 @@ export class EnhancedMemoryManager {
       
       // Auto-save high-confidence, high-priority memories
       try {
-        const memoryItem = await this.saveEnhancedMemory(context.userId, adaptedCandidate);
+        await this.saveEnhancedMemory(context.userId, adaptedCandidate);
         result.saved.push(adaptedCandidate);
         
         // Record successful save for learning
@@ -191,7 +190,7 @@ export class EnhancedMemoryManager {
    */
   private buildMemoryContext(context: ConversationContext, utterance: string): MemoryContext {
     const sentiment = detectSentiment(utterance);
-    const temporal = detectTemporal(utterance);
+    // temporal data is detected but not used in this context yet
     
     return {
       conversationTopic: context.conversationTopic,
@@ -254,7 +253,7 @@ export class EnhancedMemoryManager {
       key: candidate.key,
       value: candidate.value,
       confidence: candidate.confidence,
-      ttl: defaultTTL(candidate.type)
+      ttl: defaultTTL(candidate.type) || undefined
     });
 
     console.log(`✅ Saved enhanced memory: ${candidate.key}="${candidate.value}" [${candidate.category}/${candidate.priority}]`);
@@ -352,10 +351,10 @@ export class EnhancedMemoryManager {
    * Manual feedback processing for learning
    */
   async processFeedback(
-    userId: string,
+    _userId: string,
     candidateId: string,
     action: 'accepted' | 'rejected' | 'modified',
-    modifiedCandidate?: EnhancedCandidate
+    _modifiedCandidate?: EnhancedCandidate
   ): Promise<void> {
     // Find the original candidate (would need to store pending suggestions)
     // For now, this is a placeholder for the feedback mechanism

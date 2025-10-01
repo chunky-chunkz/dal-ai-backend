@@ -9,11 +9,11 @@
  */
 
 import { FastifyInstance } from 'fastify';
-import { requireAuth } from '../middleware/authGuard';
-import { getValidAccessToken } from '../auth/token.store';
-import { getMeExtended } from '../auth/userinfo';
-import { listNextEvents, listUnreadMail, AuthenticationError, formatEventDate } from '../connectors/outlook';
-import * as userRepo from '../users/user.repo';
+import { requireAuth } from '../middleware/authGuard.js';
+import { getValidAccessToken } from '../auth/token.store.js';
+import { getMeExtended } from '../auth/userinfo.js';
+import { listNextEvents, listUnreadMail, AuthenticationError, formatEventDate } from '../connectors/outlook.js';
+import * as userRepo from '../users/user.repo.js';
 
 // Response interfaces
 interface UserResponse {

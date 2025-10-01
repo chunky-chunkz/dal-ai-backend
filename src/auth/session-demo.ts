@@ -2,8 +2,8 @@
  * Demo of session management and auth guard functionality
  */
 
-import { createSession, getSession, destroySession } from './session';
-import { requireAuth, optionalAuth, getCurrentUserId } from '../middleware/authGuard';
+import { createSession, getSession, destroySession } from './session.js';
+import { requireAuth, optionalAuth, getCurrentUserId } from '../middleware/authGuard.js';
 
 async function demonstrateSessionAuth() {
   console.log('=== Session & Auth Demo ===\n');
