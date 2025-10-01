@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Variables
-NAME="DAL-AI"
+NAME="dal-ai-backend"
 SERVICE_FILE="/etc/systemd/system/$NAME.service"
 APP_DIR="/var/www/$NAME"
 SERVICE_CONTENT="[Unit]
