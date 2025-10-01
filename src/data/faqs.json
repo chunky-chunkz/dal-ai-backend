@@ -1,0 +1,226 @@
+[
+  {
+    "id": "rechnung-frist",
+    "title": "Zahlungsfrist für Rechnungen",
+    "question_variants": [
+      "Wie lange habe ich Zeit, die Rechnung zu bezahlen?",
+      "Zahlungsziel Rechnung?",
+      "Bis wann Rechnung zahlen?",
+      "Zahlungsfrist verlängern möglich?",
+      "Wann ist meine Rechnung fällig?"
+    ],
+    "answer": "Die Zahlungsfrist beträgt 30 Tage ab Rechnungsdatum. Bei Lastschriftverfahren wird der Betrag automatisch nach 14 Tagen eingezogen. Eine Verlängerung ist nur in Ausnahmefällen nach Rücksprache mit unserem Kundenservice möglich.",
+    "product_tags": ["billing", "invoice", "payment"],
+    "last_reviewed": "2025-02-01"
+  },
+  {
+    "id": "dsl-geschwindigkeit",
+    "title": "DSL-Geschwindigkeit prüfen und optimieren",
+    "question_variants": [
+      "Warum ist mein Internet so langsam?",
+      "DSL-Geschwindigkeit testen",
+      "Internet Speed zu niedrig",
+      "Bandbreite messen",
+      "Speedtest durchführen",
+      "WLAN langsam was tun?"
+    ],
+    "answer": "Führen Sie zunächst einen Speedtest über unsere Website durch. Prüfen Sie auch die Verbindung direkt am Router mit einem Ethernet-Kabel. Bei dauerhaft niedrigen Geschwindigkeiten kontaktieren Sie unseren technischen Support unter 0800-123456.",
+    "product_tags": ["dsl", "internet", "speed", "technical"],
+    "last_reviewed": "2025-01-15"
+  },
+  {
+    "id": "router-reset",
+    "title": "Router zurücksetzen und neu starten",
+    "question_variants": [
+      "Wie starte ich den Router neu?",
+      "Router Reset durchführen",
+      "WLAN funktioniert nicht",
+      "Internet geht nicht",
+      "Router Neustart",
+      "Fritzbox zurücksetzen"
+    ],
+    "answer": "Trennen Sie den Router für 10 Sekunden vom Strom und schließen Sie ihn wieder an. Warten Sie 2-3 Minuten bis alle LEDs stabil leuchten. Bei anhaltenden Problemen halten Sie die Reset-Taste 10 Sekunden gedrückt (Werkseinstellungen).",
+    "product_tags": ["router", "technical", "troubleshooting"],
+    "last_reviewed": "2025-01-20"
+  },
+  {
+    "id": "kundigung-frist",
+    "title": "Kündigungsfristen und Vertragsende",
+    "question_variants": [
+      "Wie kann ich meinen Vertrag kündigen?",
+      "Kündigungsfrist beachten",
+      "Wann kann ich kündigen?",
+      "Vertrag beenden",
+      "Kündigungsschreiben senden",
+      "Online kündigen möglich?"
+    ],
+    "answer": "Die Kündigungsfrist beträgt 3 Monate zum Vertragsende. Nach der Mindestvertragslaufzeit verlängert sich der Vertrag um jeweils 12 Monate. Eine Kündigung ist schriftlich oder über unser Online-Kundenportal möglich.",
+    "product_tags": ["contract", "cancellation", "terms"],
+    "last_reviewed": "2025-01-10"
+  },
+  {
+    "id": "mobilfunk-tarif",
+    "title": "Mobilfunktarif wechseln oder anpassen",
+    "question_variants": [
+      "Kann ich meinen Tarif ändern?",
+      "Tarifwechsel durchführen",
+      "Mehr Datenvolumen buchen",
+      "Tarif upgraden",
+      "Günstigeren Tarif finden",
+      "Optionen hinzubuchen"
+    ],
+    "answer": "Ein Tarifwechsel ist jederzeit zum nächsten Monat möglich. Loggen Sie sich in Ihr Kundenportal ein oder rufen Sie uns unter 0800-654321 an. Zusätzliches Datenvolumen können Sie auch per SMS buchen (SMS 'DATA' an 1234).",
+    "product_tags": ["mobile", "tariff", "data", "options"],
+    "last_reviewed": "2025-01-25"
+  },
+  {
+    "id": "rechnung-online",
+    "title": "Online-Rechnung aktivieren und verwalten",
+    "question_variants": [
+      "Wie bekomme ich meine Rechnung online?",
+      "E-Rechnung aktivieren",
+      "Papierrechnung abbestellen",
+      "Digitale Rechnung einrichten",
+      "Rechnung per E-Mail",
+      "Umweltfreundlich Rechnung erhalten"
+    ],
+    "answer": "Aktivieren Sie die Online-Rechnung in Ihrem Kundenportal unter 'Einstellungen > Rechnungsversand'. Sie erhalten dann eine E-Mail-Benachrichtigung und sparen dabei 2€ pro Monat gegenüber der Papierrechnung.",
+    "product_tags": ["billing", "online", "digital", "environment"],
+    "last_reviewed": "2025-02-01"
+  },
+  {
+    "id": "passwort-vergessen",
+    "title": "Passwort zurücksetzen für Online-Services",
+    "question_variants": [
+      "Passwort vergessen",
+      "Login funktioniert nicht",
+      "Kundenportal Zugang wiederherstellen",
+      "Neues Passwort anfordern",
+      "Account gesperrt",
+      "Einloggen nicht möglich"
+    ],
+    "answer": "Klicken Sie auf der Login-Seite auf 'Passwort vergessen' und geben Sie Ihre E-Mail-Adresse oder Kundennummer ein. Sie erhalten dann eine E-Mail mit einem Link zum Zurücksetzen Ihres Passworts.",
+    "product_tags": ["login", "password", "account", "portal"],
+    "last_reviewed": "2025-01-30"
+  },
+  {
+    "id": "umzug-anmelden",
+    "title": "Umzug anmelden und Anschluss mitnehmen",
+    "question_variants": [
+      "Wie melde ich einen Umzug an?",
+      "Anschluss zur neuen Adresse mitnehmen",
+      "Umzugsservice nutzen",
+      "Internet beim Umzug",
+      "Neue Adresse hinterlegen",
+      "Vertrag bei Umzug"
+    ],
+    "answer": "Melden Sie Ihren Umzug mindestens 4 Wochen vorher über unser Kundenportal oder telefonisch unter 0800-987654 an. Wir prüfen die Verfügbarkeit am neuen Standort und koordinieren den nahtlosen Übergang Ihrer Dienste.",
+    "product_tags": ["moving", "address", "service", "relocation"],
+    "last_reviewed": "2025-01-18"
+  },
+  {
+    "id": "störung-melden",
+    "title": "Technische Störung melden und Status prüfen",
+    "question_variants": [
+      "Internet Störung melden",
+      "Telefon funktioniert nicht",
+      "Ausfall in meiner Region",
+      "Störungshotline anrufen",
+      "Wann ist Störung behoben?",
+      "Netzprobleme in der Gegend"
+    ],
+    "answer": "Prüfen Sie zunächst unsere Störungskarte auf der Website für bekannte Ausfälle in Ihrer Region. Für individuelle Störungen nutzen Sie unser Störungsportal oder rufen die kostenlose Störungshotline 0800-333444 an (24/7 verfügbar).",
+    "product_tags": ["outage", "technical", "support", "network"],
+    "last_reviewed": "2025-01-22"
+  },
+  {
+    "id": "roaming-ausland",
+    "title": "Roaming im Ausland und EU-Tarife",
+    "question_variants": [
+      "Kosten im EU-Ausland",
+      "Roaming-Gebühren vermeiden",
+      "Internet im Urlaub nutzen",
+      "Telefonieren im Ausland",
+      "EU-Roaming kostenlos?",
+      "Datenvolumen im Ausland"
+    ],
+    "answer": "In der EU gelten seit 2017 keine Roaming-Gebühren mehr - Sie nutzen Ihren Tarif zu Inlandskonditionen. Außerhalb der EU gelten spezielle Roaming-Tarife. Aktivieren Sie vor Reiseantritt einen Auslandstarif über das Kundenportal.",
+    "product_tags": ["roaming", "eu", "abroad", "travel", "costs"],
+    "last_reviewed": "2025-01-12"
+  },
+  {
+    "id": "datenvolumen-nachbuchen",
+    "title": "Datenvolumen nachbuchen oder erhöhen",
+    "question_variants": [
+      "Datenvolumen aufgebraucht",
+      "Zusätzliche GB kaufen",
+      "Highspeed wieder aktivieren",
+      "Daten-Flat nachbuchen",
+      "Volume-Pass bestellen",
+      "Internet wieder schnell machen"
+    ],
+    "answer": "Buchen Sie zusätzliches Datenvolumen über SMS 'DATA' an 1234, im Kundenportal oder in der MeinTelekom App. Verfügbare Pakete: 1GB (4,95€), 5GB (14,95€), unlimitiert für 7 Tage (9,95€).",
+    "product_tags": ["data", "volume", "mobile", "speed", "booking"],
+    "last_reviewed": "2025-01-28"
+  },
+  {
+    "id": "tv-sender-fehlen",
+    "title": "TV-Sender fehlen oder sind verschlüsselt",
+    "question_variants": [
+      "Warum fehlen TV-Sender?",
+      "Sendersuchlauf durchführen",
+      "Verschlüsselte Sender freischalten",
+      "HD-Sender aktivieren",
+      "Senderliste aktualisieren",
+      "Premium-Sender buchen"
+    ],
+    "answer": "Führen Sie einen automatischen Sendersuchlauf an Ihrem Receiver durch. HD-Sender sind in Premium-Paketen enthalten. Für verschlüsselte Sender benötigen Sie entsprechende Zusatzpakete, die Sie über das Kundenportal buchen können.",
+    "product_tags": ["tv", "receiver", "channels", "hd", "premium"],
+    "last_reviewed": "2025-01-20"
+  },
+  {
+    "id": "sim-karte-tauschen",
+    "title": "SIM-Karte tauschen oder Ersatz bestellen",
+    "question_variants": [
+      "SIM-Karte defekt",
+      "Neue SIM-Karte bestellen",
+      "eSIM aktivieren",
+      "SIM-Karte gesperrt",
+      "Ersatz-SIM anfordern",
+      "Nano-SIM zu Micro-SIM"
+    ],
+    "answer": "Eine Ersatz-SIM-Karte können Sie im Kundenportal für 9,95€ bestellen oder kostenlos in einem unserer Shops abholen. Die eSIM-Aktivierung ist über die MeinTelekom App möglich. Bei Diebstahl sperren Sie die SIM sofort unter 0800-33-6000.",
+    "product_tags": ["sim", "replacement", "esim", "card", "blocked"],
+    "last_reviewed": "2025-01-16"
+  },
+  {
+    "id": "vertrag-verlaengern",
+    "title": "Vertragsverlängerung und Upgrades",
+    "question_variants": [
+      "Vertrag verlängern mit Handy",
+      "Upgrade zu neuem Smartphone",
+      "Vertragsverlängerung Angebote",
+      "Treuerabatt erhalten",
+      "Neues Gerät zum Vertrag",
+      "Bestandskunden Vorteile"
+    ],
+    "answer": "Als Bestandskunde erhalten Sie 3 Monate vor Vertragsende exklusive Verlängerungsangebote per E-Mail. Prüfen Sie verfügbare Upgrades und Treuerabatte im Kundenportal unter 'Mein Vertrag > Verlängerungsangebote'.",
+    "product_tags": ["contract", "extension", "upgrade", "smartphone", "loyalty"],
+    "last_reviewed": "2025-01-14"
+  },
+  {
+    "id": "rechnung-reklamation",
+    "title": "Rechnung beanstanden oder reklamieren",
+    "question_variants": [
+      "Rechnung ist zu hoch",
+      "Falsche Abbuchung reklamieren",
+      "Rechnungsposten prüfen lassen",
+      "Einspruch gegen Rechnung",
+      "Kostenerstattung beantragen",
+      "Rechnungsfehler melden"
+    ],
+    "answer": "Prüfen Sie zunächst die Einzelverbindungsnachweise in Ihrem Kundenportal. Bei Unstimmigkeiten wenden Sie sich innerhalb von 8 Wochen schriftlich oder über das Kontaktformular an unseren Kundenservice. Wir prüfen jeden Fall individuell.",
+    "product_tags": ["billing", "complaint", "dispute", "refund", "error"],
+    "last_reviewed": "2025-01-26"
+  }
+]

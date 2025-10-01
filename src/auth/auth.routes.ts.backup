@@ -1,0 +1,301 @@
+/**
+ * Task: Implement lo// Environment configuration
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';callback, logout routes for Microsoft OAuth.
+ * Routes:
+ * - GET /auth/login
+ *   - generate state (random) + (optional) PKCE pair; store in session
+ *   - redirect to buildAuthUrl(state, codeChallenge)
+ * - GET /auth/callback?code&state
+ *   - verify state matches session
+ *   - exchange code for token (with codeVerifier if PKCE)
+ *   - fetch user profile (getMe)
+ *   - save session user + tokens; redirect to FRONTEND_ORIGIN (e.g. /app)
+ * - POST /auth/logout
+ *   - destroy session; clear cookie; return {ok:true}
+ * Notes:
+ * - Use session helpers; set cookie if not exists.
+ * - CORS allow FRONTEND_ORIGIN for POST /auth/logout
+ * - No stack traces to client; log errors server-side.
+ */
+import crypto from 'crypto';
+import type { FastifyInstance } from 'fastify';
+import { buildAuthUrl, exchangeCodeForToken } from './auth.config.js';
+import { createSession, getSession, setSessionData, destroySession, getSessionData } from './session.js';
+import { saveTokens } from './token.store.js';
+import { getMe } from './userinfo.js';
+import { createPkcePair, isPkceEnabled } from './pkce.js';
+
+// Environment configuration
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
+
+// Route interfaces
+interface LoginQuery {
+  redirect?: string;
+}
+
+interface CallbackQuery {
+  code?: string;
+  state?: string;
+  error?: string;
+  error_description?: string;
+}
+
+/**
+ * Register authentication routes with Fastify
+ */
+export async function authRoutes(fastify: FastifyInstance) {
+  
+  /**
+   * GET /auth/login
+   * Initiate Microsoft OAuth login flow
+   */
+  fastify.get<{ Querystring: LoginQuery }>('/login', async (request, reply) => {
+    try {
+      console.log('🔐 Starting OAuth login flow...');
+      
+      // Get or create session
+      let session = getSession(request);
+      let sessionId = session.sid;
+      
+      if (!sessionId) {
+        sessionId = createSession(reply);
+        console.log(`📝 Created new session: ${sessionId}`);
+      }
+      
+      // Generate state for CSRF protection
+      const state = crypto.randomBytes(16).toString('hex');
+      
+      // Optional: Generate PKCE pair for enhanced security
+      let codeVerifier: string | undefined;
+      let codeChallenge: string | undefined;
+      
+      if (isPkceEnabled()) {
+        const pkcePair = await createPkcePair();
+        codeVerifier = pkcePair.verifier;
+        codeChallenge = pkcePair.challenge;
+        console.log('🔒 Using PKCE for enhanced security');
+      }
+      
+      // Store OAuth state and PKCE in session
+      setSessionData(sessionId, {
+        user: undefined, // Clear any existing user
+        tokens: undefined, // Clear any existing tokens
+      });
+      
+      // For simplicity, store in session. In production, consider Redis or separate store
+      setSessionData(sessionId, { 
+        oauthState: state,
+        oauthCodeVerifier: codeVerifier,
+        oauthRedirectUrl: request.query.redirect || `${FRONTEND_ORIGIN}/app`,
+        oauthTimestamp: Date.now()
+      } as any);
+      
+      // Build authorization URL
+      const authUrl = buildAuthUrl(state, codeChallenge);
+      
+      console.log(`🚀 Redirecting to Microsoft OAuth: ${authUrl}`);
+      
+      // Redirect to Microsoft OAuth
+      return reply.redirect(authUrl);
+      
+    } catch (error) {
+      console.error('❌ Error in /auth/login:', error);
+      return reply.status(500).send({ 
+        error: 'Internal server error during login initiation' 
+      });
+    }
+  });
+
+  /**
+   * GET /auth/callback
+   * Handle Microsoft OAuth callback
+   */
+  fastify.get<{ Querystring: CallbackQuery }>('/callback', async (request, reply) => {
+    try {
+      console.log('🔄 Processing OAuth callback...');
+      
+      // Check for OAuth errors
+      if (request.query.error) {
+        console.error(`❌ OAuth error: ${request.query.error} - ${request.query.error_description}`);
+        return reply.redirect(`${FRONTEND_ORIGIN}/login?error=oauth_error`);
+      }
+      
+      const { code, state } = request.query;
+      
+      if (!code || !state) {
+        console.error('❌ Missing code or state in callback');
+        return reply.redirect(`${FRONTEND_ORIGIN}/login?error=invalid_callback`);
+      }
+      
+      // Get session
+      const session = getSession(request);
+      if (!session.sid) {
+        console.error('❌ No session found in callback');
+        return reply.redirect(`${FRONTEND_ORIGIN}/login?error=session_expired`);
+      }
+      
+      // Get OAuth data from session
+      const sessionData = getSessionData(session.sid);
+      
+      if (!sessionData) {
+        console.error('❌ No session data found');
+        return reply.redirect(`${FRONTEND_ORIGIN}/login?error=session_invalid`);
+      }
+      
+      // Access OAuth data directly from session
+      const oauthState = (sessionData as any).oauthState;
+      const oauthCodeVerifier = (sessionData as any).oauthCodeVerifier;
+      const oauthRedirectUrl = (sessionData as any).oauthRedirectUrl;
+      const oauthTimestamp = (sessionData as any).oauthTimestamp;
+      
+      if (!oauthState) {
+        console.error('❌ No OAuth state found in session');
+        return reply.redirect(`${FRONTEND_ORIGIN}/login?error=session_invalid`);
+      }
+      
+      // Verify state to prevent CSRF attacks
+      if (state !== oauthState) {
+        console.error('❌ State mismatch in OAuth callback');
+        return reply.redirect(`${FRONTEND_ORIGIN}/login?error=state_mismatch`);
+      }
+      
+      // Check if OAuth flow is too old (15 minutes max)
+      if (oauthTimestamp && Date.now() - oauthTimestamp > 15 * 60 * 1000) {
+        console.error('❌ OAuth flow expired');
+        return reply.redirect(`${FRONTEND_ORIGIN}/login?error=flow_expired`);
+      }
+      
+      console.log('✅ State verification successful');
+      
+      // Exchange code for tokens
+      const tokens = await exchangeCodeForToken(code, oauthCodeVerifier);
+      console.log('🎟️ Tokens received successfully');
+      
+      // Fetch user profile
+      const userProfile = await getMe(tokens.access_token);
+      console.log(`👤 User profile fetched: ${userProfile.displayName}`);
+      
+      // Save tokens to secure storage
+      saveTokens(session.sid, {
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        expires_in: tokens.expires_in
+      });
+      
+      // Save user data to session
+      setSessionData(session.sid, {
+        user: {
+          id: userProfile.id,
+          name: userProfile.displayName,
+          email: userProfile.mail || userProfile.userPrincipalName || ''
+        }
+      });
+      
+      console.log(`✅ Authentication complete for user: ${userProfile.displayName}`);
+      
+      // Redirect to frontend application
+      const redirectUrl = oauthRedirectUrl || `${FRONTEND_ORIGIN}/app`;
+      return reply.redirect(redirectUrl);
+      
+    } catch (error) {
+      console.error('❌ Error in /auth/callback:', error);
+      return reply.redirect(`${FRONTEND_ORIGIN}/login?error=callback_error`);
+    }
+  });
+
+  /**
+   * POST /auth/logout
+   * Logout user and destroy session
+   */
+  fastify.post('/logout', async (request, reply) => {
+    try {
+      console.log('🚪 Processing logout request...');
+      
+      // Get session
+      const session = getSession(request);
+      
+      if (session.sid) {
+        // Destroy session and clear cookie
+        destroySession(session.sid, reply);
+        console.log(`✅ Session destroyed: ${session.sid}`);
+      }
+      
+      return reply.send({ 
+        ok: true, 
+        message: 'Logged out successfully' 
+      });
+      
+    } catch (error) {
+      console.error('❌ Error in /auth/logout:', error);
+      return reply.status(500).send({ 
+        ok: false, 
+        error: 'Internal server error during logout' 
+      });
+    }
+  });
+
+  /**
+   * GET /auth/me
+   * Get current user information (bonus endpoint)
+   */
+  fastify.get('/me', async (request, reply) => {
+    try {
+      const session = getSession(request);
+      
+      if (!session.sid) {
+        return reply.status(401).send({ error: 'Not authenticated' });
+      }
+      
+      const sessionData = getSessionData(session.sid);
+      
+      if (!sessionData?.user) {
+        return reply.status(401).send({ error: 'No user data found' });
+      }
+      
+      return reply.send({
+        user: sessionData.user,
+        authenticated: true
+      });
+      
+    } catch (error) {
+      console.error('❌ Error in /auth/me:', error);
+      return reply.status(500).send({ 
+        error: 'Internal server error' 
+      });
+    }
+  });
+
+  /**
+   * GET /auth/status
+   * Check authentication status (bonus endpoint)
+   */
+  fastify.get('/status', async (request, reply) => {
+    try {
+      const session = getSession(request);
+      
+      if (!session.sid) {
+        return reply.send({ authenticated: false });
+      }
+      
+      const sessionData = getSessionData(session.sid);
+      
+      return reply.send({
+        authenticated: !!sessionData?.user,
+        user: sessionData?.user ? {
+          id: sessionData.user.id,
+          name: sessionData.user.name,
+          email: sessionData.user.email
+        } : null
+      });
+      
+    } catch (error) {
+      console.error('❌ Error in /auth/status:', error);
+      return reply.status(500).send({ 
+        authenticated: false,
+        error: 'Internal server error' 
+      });
+    }
+  });
+
+  console.log('🔐 Authentication routes registered successfully');
+}

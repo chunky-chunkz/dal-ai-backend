@@ -1,0 +1,39 @@
+{
+  "version": "1.0.0",
+  "lastSweep": "2025-09-22T09:54:12.835Z",
+  "memories": [
+    {
+      "id": "mem_1758534854560_q0kl0yzfw",
+      "userId": "test-user-profile",
+      "person": "self",
+      "type": "profile_fact",
+      "key": "beruf",
+      "value": "softwareentwickler",
+      "confidence": 0.9,
+      "createdAt": "2025-09-22T09:54:14.560Z",
+      "updatedAt": "2025-09-22T09:54:14.560Z"
+    },
+    {
+      "id": "mem_1758534854566_leivyscok",
+      "userId": "test-user-profile",
+      "person": "self",
+      "type": "profile_fact",
+      "key": "wohnort",
+      "value": "berlin",
+      "confidence": 0.9,
+      "createdAt": "2025-09-22T09:54:14.566Z",
+      "updatedAt": "2025-09-22T09:54:14.566Z"
+    },
+    {
+      "id": "mem_1758534856202_7z11s11q3",
+      "userId": "test-user-color",
+      "person": "self",
+      "type": "preference",
+      "key": "lieblingsfarbe",
+      "value": "blau",
+      "confidence": 0.9,
+      "createdAt": "2025-09-22T09:54:16.202Z",
+      "updatedAt": "2025-09-22T09:54:16.202Z"
+    }
+  ]
+}

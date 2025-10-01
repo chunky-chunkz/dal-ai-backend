@@ -1,0 +1,33 @@
+{
+  "profiles": {
+    "meine": {
+      "name": "meine",
+      "data": {
+        "lieblingsfarbe": "blau"
+      },
+      "lastUpdated": 1758111224057
+    },
+    "nein": {
+      "name": "nein",
+      "data": {
+        "ich frage dich, was": "meine lieblingsfarbe?"
+      },
+      "lastUpdated": 1758111280157
+    },
+    "hallo": {
+      "name": "hallo",
+      "data": {
+        "meine lieblingsfarbe": "rot"
+      },
+      "lastUpdated": 1758111804418
+    },
+    "also": {
+      "name": "also",
+      "data": {
+        "meine leiblingsfarbe": "rot"
+      },
+      "lastUpdated": 1758113642376
+    }
+  },
+  "lastSaved": 1758113642377
+}

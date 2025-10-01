@@ -1,0 +1,10 @@
+{
+  "timestamp": "2025-09-08T13:56:33.178Z",
+  "accuracy": "0.0",
+  "fallbackRate": "100.0",
+  "avgResponseTime": null,
+  "p50ResponseTime": null,
+  "testCases": 5,
+  "correct": 0,
+  "fallbacks": 5
+}

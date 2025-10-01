@@ -1,0 +1,19 @@
+stages:
+  - deploy
+
+variables:
+  DEPLOY_DIR: "/var/www/dal-ai-backend"
+  GIT_REPO: "git@git.sunrise-avengers.ch:appli/dal-ai/dal-ai-backend.git"
+
+deploy:
+  stage: deploy
+  variables:
+    SERVER: "nodejs.lab.local"
+
+  script:
+    - sudo ssh $SERVER "./gitlab-deploy.sh $GIT_REPO $DEPLOY_DIR"
+
+  only:
+    - main
+
+

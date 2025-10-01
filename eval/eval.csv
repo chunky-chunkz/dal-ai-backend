@@ -1,0 +1,7 @@
+question,answer_id,notes
+"Wie lange habe ich Zeit, die Rechnung zu bezahlen?","rechnung-frist","billing"
+"Wie aktiviere ich Roaming im Ausland?","roaming-aktiv","roaming"
+"Ich habe kein Netz in Zürich.","netz-stoerung","outage"
+"Kann ich meine SIM sperren?","sim-sperre","security"
+"Wie wechsle ich meinen Tarif?","abo-wechsel","plan"
+"Ich erwarte keinen Treffer (None-Fall)","__NONE__","expect fallback"
