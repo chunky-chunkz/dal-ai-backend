@@ -345,7 +345,7 @@ export class MemoryConsolidator {
    * Periodic cleanup of old, low-quality, or contradictory memories
    */
   static cleanupMemories(memories: EnhancedCandidate[]): EnhancedCandidate[] {
-    const cleaned = [];
+    const cleaned: EnhancedCandidate[] = [];
     const groups = this.groupSimilarMemories(memories);
     
     for (const group of groups) {

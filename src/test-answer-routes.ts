@@ -30,7 +30,7 @@ async function testPostAnswer() {
       return;
     }
 
-    const result = await response.json() as any;
+    const result: any = await response.json();
     console.log('✅ POST /api/answer response:');
     console.log(`   Answer: ${result.answer}`);
     console.log(`   Confidence: ${result.confidence}`);
@@ -139,7 +139,7 @@ async function testValidation() {
     });
 
     if (response.status === 400) {
-      const error = await response.json() as any;
+      const error: any = await response.json();
       console.log('✅ POST validation working:', error.message);
     } else {
       console.log('❌ POST validation failed, expected 400 but got:', response.status);
@@ -154,7 +154,7 @@ async function testValidation() {
     const response = await fetch(`${API_BASE}/answer/stream?question=${question}`);
 
     if (response.status === 400) {
-      const error = await response.json() as any;
+      const error: any = await response.json();
       console.log('✅ GET stream validation working:', error.message);
     } else {
       console.log('❌ GET stream validation failed, expected 400 but got:', response.status);

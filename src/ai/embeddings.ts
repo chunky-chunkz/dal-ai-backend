@@ -48,7 +48,9 @@ class EmbeddingService {
 
     try {
       console.log(`🔧 Loading embedding model: ${this.model}`);
-      this.pipeline = await pipeline('feature-extraction', this.model) as FeatureExtractionPipeline;
+      this.pipeline = await pipeline('feature-extraction', this.model, {
+        quantized: true
+      }) as FeatureExtractionPipeline;
       console.log('✅ Embedding model loaded successfully');
     } catch (error) {
       console.error('❌ Failed to load embedding model:', error);

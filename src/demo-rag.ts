@@ -129,7 +129,7 @@ async function runRagDemo() {
   
   const streamResponse = ragLocalAnswerStream(streamQuestion, undefined, 3);
   
-  streamResponse.onToken((chunk) => {
+  streamResponse.onToken((chunk: string) => {
     process.stdout.write(chunk);
     streamedContent += chunk;
     tokenCount++;
@@ -142,8 +142,6 @@ async function runRagDemo() {
   console.log(`   Total Tokens: ${tokenCount}`);
   console.log(`   Stream Time: ${streamTime}ms`);
   console.log(`   Avg per Token: ${(streamTime / tokenCount).toFixed(1)}ms`);
-  console.log(`   Confidence: ${finalResult.confidence.toFixed(3)}`);
-  console.log(`   Sources: ${finalResult.sourceIds.join(', ')}`);
 }
 
 // Performance benchmark

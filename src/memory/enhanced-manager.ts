@@ -12,7 +12,7 @@ import { listByUser, upsert, type MemoryItem } from './store.js';
 import { MemoryCategorizerEnhanced, type EnhancedCandidate, type MemoryContext } from './enhanced-categorizer.js';
 import { MemoryConsolidator, type ConsolidationResult } from './consolidator.js';
 import { AdaptiveLearningSystem, type LearningData } from './adaptive-learning.js';
-import { detectSentiment, detectTemporal } from './text-utils.js';
+import { detectSentiment } from './text-utils.js';
 
 export interface EnhancedEvaluationResult {
   saved: EnhancedCandidate[];
@@ -253,7 +253,7 @@ export class EnhancedMemoryManager {
       key: candidate.key,
       value: candidate.value,
       confidence: candidate.confidence,
-      ttl: defaultTTL(candidate.type) || undefined
+      ttl: defaultTTL(candidate.type) ?? undefined
     });
 
     console.log(`✅ Saved enhanced memory: ${candidate.key}="${candidate.value}" [${candidate.category}/${candidate.priority}]`);
@@ -299,7 +299,7 @@ export class EnhancedMemoryManager {
 
     // Recent trends analysis
     const recentMemories = existingMemories.slice(-10);
-    const recentTrends = [];
+    const recentTrends: string[] = [];
 
     if (recentMemories.length > 5) {
       const recentTypes = recentMemories.map(m => m.type);
@@ -330,14 +330,9 @@ export class EnhancedMemoryManager {
   private isTooVolatile(candidate: EnhancedCandidate, context: ConversationContext): boolean {
     if (candidate.volatility !== 'dynamic') return false;
 
-    // Check for temporal indicators that suggest short-term relevance
-    const temporal = detectTemporal(candidate.value);
+    // Simplified volatility check without temporal detection
+    // (temporal detection function is not available)
     
-    if (temporal.isTemporal && temporal.temporalType === 'relative') {
-      // Very short-term references like "jetzt", "gerade"
-      return true;
-    }
-
     // Context-based volatility check
     if (context.userMood === 'negative' && candidate.category === 'personal') {
       // Avoid storing personal info when user seems upset

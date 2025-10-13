@@ -268,7 +268,7 @@ class EnhancedMemoryTests {
     };
     
     // Generate many similar candidates to test deduplication
-    const stressUtterances = [];
+    const stressUtterances: string[] = [];
     for (let i = 0; i < 20; i++) {
       stressUtterances.push(`Ich mag Farbe nummer ${i} und das ist ${['rot', 'blau', 'grün'][i % 3]}.`);
     }

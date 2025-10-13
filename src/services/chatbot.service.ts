@@ -222,7 +222,13 @@ export class ChatbotService {
     reason: string[];
   }> {
     const lowerQuestion = question.toLowerCase();
-    const matchedExperts = [];
+    const matchedExperts: Array<{
+      id: string;
+      name: string;
+      email?: string;
+      confidence: number;
+      reason: string[];
+    }> = [];
 
     for (const expert of this.experts) {
       let score = 0;

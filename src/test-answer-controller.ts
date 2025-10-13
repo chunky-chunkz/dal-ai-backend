@@ -57,7 +57,7 @@ async function testPostAnswer() {
       const isJson = response.headers.get('content-type')?.includes('application/json');
       
       if (isJson) {
-        const data = await response.json() as any;
+        const data: any = await response.json();
         
         console.log(`      Status: ${response.status}`);
         console.log(`      Response time: ${responseTime}ms`);
@@ -240,7 +240,7 @@ async function testInvalidStreamRequests() {
       console.log(`   ❌ ${testCase.name}`);
       
       const response = await fetch(testCase.url);
-      const data = await response.json() as any;
+      const data: any = await response.json();
       
       console.log(`      Status: ${response.status}`);
       console.log(`      Error: ${data.error || 'No error message'}`);
