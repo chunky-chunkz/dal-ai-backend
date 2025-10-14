@@ -1,0 +1,16 @@
+[
+  {
+    "id": "2890bb90ef3fca171ec9ecab81c5eb95",
+    "email": "dzhangr@sunrise.net",
+    "passwordHash": "$argon2id$v=19$m=19456,t=2,p=1$HGZYmCqlDmzakzQj/PLgpg$pNqCAhRZFmCcqfYaq6lGT6HPaDws/gNo1QffCt39qYM",
+    "displayName": "dzhangr",
+    "createdAt": "2025-10-13T11:52:04.476Z"
+  },
+  {
+    "id": "7711bbe4aa11a0167313b3cb941ea9cc",
+    "email": "roman@sunrise.net",
+    "passwordHash": "$argon2id$v=19$m=19456,t=2,p=1$iwQGfXp1SArflJM3MqSsKg$Jt7RYWVW12cb1YVCFKmL/jNPf+cC36NNeFZgmCr2C0I",
+    "displayName": "Roman",
+    "createdAt": "2025-10-13T11:55:23.859Z"
+  }
+]

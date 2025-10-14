@@ -87,6 +87,13 @@ export async function postAnswer(
     // Extract user ID from session (for memory system)
     const userId = request.userId; // Set by auth middleware if user is logged in
 
+    console.log('📥 POST /api/answer request:', {
+      question: question.substring(0, 50),
+      sessionId,
+      userId: userId || 'anonymous',
+      hasAuth: !!userId
+    });
+
     // If user is logged in, extract and store memories from the question
     // NOTE: Memory processing is now handled by the new memory system in answer.service.ts
     // if (userId) {

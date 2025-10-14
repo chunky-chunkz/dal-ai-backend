@@ -34,6 +34,83 @@
       "confidence": 0.9,
       "createdAt": "2025-09-22T09:54:16.202Z",
       "updatedAt": "2025-09-22T09:54:16.202Z"
+    },
+    {
+      "id": "mem_1760425181514_ujw6l6dpv",
+      "userId": "test-user-123",
+      "person": "self",
+      "type": "preference",
+      "key": "lieblingsfarbe",
+      "value": "rot",
+      "confidence": 0.95,
+      "createdAt": "2025-10-14T06:59:41.514Z",
+      "updatedAt": "2025-10-14T06:59:41.514Z"
+    },
+    {
+      "id": "mem_1760425182069_s17vwx5wg",
+      "userId": "test-user-123",
+      "person": "self",
+      "type": "preference",
+      "key": "getraenk_zeit",
+      "value": "kaffee nicht spezifiziert",
+      "confidence": 0.85,
+      "createdAt": "2025-10-14T06:59:42.069Z",
+      "updatedAt": "2025-10-14T06:59:42.069Z"
+    },
+    {
+      "id": "mem_1760425338894_o6xqaerpl",
+      "userId": "2890bb90ef3fca171ec9ecab81c5eb95",
+      "person": "self",
+      "type": "preference",
+      "key": "greeting_frequenz",
+      "value": "selten",
+      "confidence": 0.65,
+      "createdAt": "2025-10-14T07:02:18.893Z",
+      "updatedAt": "2025-10-14T07:05:48.010Z"
+    },
+    {
+      "id": "mem_1760425345837_sguxof854",
+      "userId": "2890bb90ef3fca171ec9ecab81c5eb95",
+      "person": "self",
+      "type": "preference",
+      "key": "lieblingsfarbe",
+      "value": "rot",
+      "confidence": 0.95,
+      "createdAt": "2025-10-14T07:02:25.837Z",
+      "updatedAt": "2025-10-14T07:06:05.561Z"
+    },
+    {
+      "id": "mem_1760427043891_9zvc48qg7",
+      "userId": "2890bb90ef3fca171ec9ecab81c5eb95",
+      "person": "self",
+      "type": "preference",
+      "key": "greeting_style",
+      "value": "formell",
+      "confidence": 0.65,
+      "createdAt": "2025-10-14T07:30:43.891Z",
+      "updatedAt": "2025-10-14T07:30:43.891Z"
+    },
+    {
+      "id": "mem_1760427180493_95hj6s1zd",
+      "userId": "7711bbe4aa11a0167313b3cb941ea9cc",
+      "person": "self",
+      "type": "preference",
+      "key": "greeting_frequenz",
+      "value": "hallo häufiger",
+      "confidence": 0.65,
+      "createdAt": "2025-10-14T07:33:00.493Z",
+      "updatedAt": "2025-10-14T07:33:00.493Z"
+    },
+    {
+      "id": "mem_1760427203447_agfondsqx",
+      "userId": "7711bbe4aa11a0167313b3cb941ea9cc",
+      "person": "self",
+      "type": "preference",
+      "key": "lieblingsfarbe",
+      "value": "blau",
+      "confidence": 0.92,
+      "createdAt": "2025-10-14T07:33:23.447Z",
+      "updatedAt": "2025-10-14T07:33:23.447Z"
     }
   ]
 }

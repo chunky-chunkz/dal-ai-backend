@@ -156,6 +156,17 @@ const FALLBACK_PATTERNS = [
  * @returns Array of memory candidates
  */
 export async function extractCandidates(utterance: string, userId?: string): Promise<Candidate[]> {
+  // Filter out questions - they should not be stored as memories
+  const lowerUtterance = utterance.toLowerCase().trim();
+  const questionWords = ['was', 'wie', 'wer', 'wo', 'wann', 'warum', 'welche', 'welcher', 'welches'];
+  const hasQuestionWord = questionWords.some(word => lowerUtterance.startsWith(word));
+  const hasQuestionMark = lowerUtterance.includes('?');
+  
+  if (hasQuestionWord || hasQuestionMark) {
+    console.log('⚠️ Skipping question - not extracting as memory:', utterance.substring(0, 50));
+    return [];
+  }
+  
   // Apply security guardrails
   if (userId && !extractionRateLimiter.canMakeRequest(userId)) {
     console.warn(`Rate limit exceeded for user ${userId}`);

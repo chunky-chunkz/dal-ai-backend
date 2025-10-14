@@ -21,7 +21,7 @@ import * as answerCache from '../utils/answerCache.js';
 import { applyGuardrails, getSensitiveTopicResponse } from '../ai/guardrails.js';
 import { setProfile, findFact } from '../memory/profileStore.js';
 import { localLLM } from '../ai/localLLM.js';
-import { getContext } from '../memory/sessionMemory.js';
+import { getContext, putTurn } from '../memory/sessionMemory.js';
 import { evaluateAndMaybeStore, type EvaluationResult } from '../memory/manager.js';
 import { listByUser } from '../memory/store.js';
 
@@ -109,6 +109,12 @@ async function generateDirectChatResponse(question: string, sessionId?: string, 
 function generateSimpleResponse(question: string, memoryContext?: string): AnswerResponse {
   const lowerQuestion = question.toLowerCase();
   
+  console.log('🔍 generateSimpleResponse called:', {
+    question: question.substring(0, 50),
+    hasMemoryContext: !!memoryContext,
+    memoryContextPreview: memoryContext ? memoryContext.substring(0, 100) : 'NONE'
+  });
+  
   let response = 'Hallo! Wie kann ich Ihnen helfen?';
   
   // Simple pattern matching for common questions
@@ -118,18 +124,25 @@ function generateSimpleResponse(question: string, memoryContext?: string): Answe
     response = 'Mir geht es gut, danke der Nachfrage! Wie geht es Ihnen denn?';
   } else if (lowerQuestion.includes('lieblings') && lowerQuestion.includes('farbe')) {
     // Check if we have stored their favorite color
-    if (memoryContext && memoryContext.includes('lieblings_farbe:')) {
-      const colorMatch = memoryContext.match(/lieblings_farbe:\s*([^\n]+)/);
+    console.log('🎨 Checking for lieblingsfarbe in memory context:', memoryContext);
+    if (memoryContext && memoryContext.includes('lieblingsfarbe:')) {
+      const colorMatch = memoryContext.match(/lieblingsfarbe:\s*([^\n]+)/);
+      console.log('🎨 Color match:', colorMatch);
       if (colorMatch) {
         response = `Ihre Lieblingsfarbe ist ${colorMatch[1]}.`;
+      } else {
+        response = 'Ich kann mich nicht an Ihre Lieblingsfarbe erinnern. Können Sie es mir nochmal sagen?';
       }
     } else {
+      console.log('❌ No lieblingsfarbe found in context');
       response = 'Ich weiß nicht, was Ihre Lieblingsfarbe ist. Können Sie es mir sagen?';
     }
   } else if (lowerQuestion.includes('was ist meine lieblingsfarbe')) {
     // Direct question about favorite color
-    if (memoryContext && memoryContext.includes('lieblings_farbe:')) {
-      const colorMatch = memoryContext.match(/lieblings_farbe:\s*([^\n]+)/);
+    console.log('🎨 Direct color question - Memory context:', memoryContext);
+    if (memoryContext && memoryContext.includes('lieblingsfarbe:')) {
+      const colorMatch = memoryContext.match(/lieblingsfarbe:\s*([^\n]+)/);
+      console.log('🎨 Color match:', colorMatch);
       if (colorMatch) {
         response = `Ihre Lieblingsfarbe ist ${colorMatch[1]}.`;
       } else {
@@ -181,19 +194,30 @@ function formatMemorySuggestions(suggestions: Array<{ key: string; value: string
  */
 async function getMemoryContext(userId: string): Promise<string> {
   try {
+    console.log('🧠 Getting memory context for userId:', userId);
     const memories = await listByUser(userId);
-    if (memories.length === 0) return '';
+    console.log('📚 Found memories:', memories.length);
+    
+    if (memories.length === 0) {
+      console.log('❌ No memories found for user');
+      return '';
+    }
     
     // Format memories as context
     const memoryLines = memories
       .filter(m => m.type === 'preference' || m.type === 'profile_fact')
       .slice(-5) // Last 5 memories to avoid too much context
-      .map(m => `${m.key}: ${m.value}`)
+      .map(m => {
+        console.log('  📝 Memory:', m.key, '=', m.value);
+        return `${m.key}: ${m.value}`;
+      })
       .join('\n');
     
-    return memoryLines ? `Benutzer-Kontext:\n${memoryLines}\n` : '';
+    const context = memoryLines ? `Benutzer-Kontext:\n${memoryLines}\n` : '';
+    console.log('✅ Memory context created:', context ? 'YES' : 'NO');
+    return context;
   } catch (error) {
-    console.warn('Failed to load memory context:', error);
+    console.warn('❌ Failed to load memory context:', error);
     return '';
   }
 }
@@ -239,9 +263,17 @@ export async function answerQuestion(question: string, sessionId?: string, memor
     // Use masked question for cache key and RAG processing
     const processedQuestion = guardrailResult.maskedQuestion;
 
+    console.log('🔍 Answer service - Input:', {
+      question: normalizedQuestion.substring(0, 50),
+      sessionId,
+      userId,
+      hasMemoryContext: !!memoryContext
+    });
+
     // Check for profile queries first (before cache and RAG)
     const profileResult = await checkProfileQuery(processedQuestion);
     if (profileResult) {
+      console.log('📋 Returning profile query result');
       return profileResult;
     }
 
@@ -249,26 +281,37 @@ export async function answerQuestion(question: string, sessionId?: string, memor
     let memoryEvaluation: EvaluationResult | null = null;
     if (userId) {
       try {
+        console.log('🧠 Evaluating memory for userId:', userId);
         memoryEvaluation = await evaluateAndMaybeStore(userId, normalizedQuestion);
-        console.log('💭 Memory evaluation:', {
+        console.log('💭 Memory evaluation result:', {
+          userId,
           suggestions: memoryEvaluation.suggestions.length,
           saved: memoryEvaluation.saved.length,
           rejected: memoryEvaluation.rejected.length
         });
       } catch (error) {
-        console.warn('Memory evaluation failed:', error instanceof Error ? error.message : 'Unknown error');
+        console.warn('❌ Memory evaluation failed:', error instanceof Error ? error.message : 'Unknown error');
       }
+    } else {
+      console.log('⚠️ No userId provided - skipping memory evaluation');
     }
 
     // Enhanced memory context - combine passed context with stored memories
     let enhancedMemoryContext = memoryContext || '';
     if (userId && !enhancedMemoryContext) {
+      console.log('🔍 Loading memory context for userId:', userId);
       enhancedMemoryContext = await getMemoryContext(userId);
+      console.log('📝 Memory context loaded:', enhancedMemoryContext ? 'YES' : 'NO');
+      if (enhancedMemoryContext) {
+        console.log('📄 Memory context content:', enhancedMemoryContext);
+      }
     }
 
-    // Check cache first (using masked question)
-    const cachedAnswer = answerCache.get(processedQuestion);
+    // Check cache first (using masked question) - but skip cache if we have memory context
+    // to ensure personalized responses are always fresh
+    const cachedAnswer = enhancedMemoryContext ? null : answerCache.get(processedQuestion);
     if (cachedAnswer) {
+      console.log('💾 Returning cached answer (no memory context)');
       // Add memory suggestions to cached answer if any
       let finalAnswer = cachedAnswer.answer;
       if (memoryEvaluation?.suggestions && memoryEvaluation.suggestions.length > 0) {
@@ -286,8 +329,24 @@ export async function answerQuestion(question: string, sessionId?: string, memor
       };
     }
 
+    console.log('🤖 Generating new answer with LLM...');
     // Use direct LLM response instead of RAG for normal chat (with enhanced memory context)
     const result = await generateDirectChatResponse(processedQuestion, sessionId, enhancedMemoryContext);
+
+    // Save user question and assistant answer to session memory
+    if (sessionId) {
+      putTurn(sessionId, {
+        role: 'user',
+        text: normalizedQuestion,
+        ts: Date.now()
+      });
+      
+      putTurn(sessionId, {
+        role: 'assistant',
+        text: result.answer,
+        ts: Date.now()
+      });
+    }
 
     // Add memory suggestions to the response if any
     if (memoryEvaluation?.suggestions && memoryEvaluation.suggestions.length > 0) {

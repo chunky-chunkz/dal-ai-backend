@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { postAnswer, streamAnswer } from '../controllers/answer.controller.js';
+import { optionalAuth } from '../middleware/authGuard.js';
 
 /**
  * Route registrieren für POST /api/answer -> Controller
@@ -8,6 +9,7 @@ import { postAnswer, streamAnswer } from '../controllers/answer.controller.js';
 export async function answerRoutes(fastify: FastifyInstance) {
   // POST /answer (wird zu /api/answer durch app-level prefix)
   fastify.post('/answer', {
+    preHandler: optionalAuth,
     schema: {
       description: 'Get an answer for a question using AI/heuristic search',
       tags: ['Answer'],
@@ -92,6 +94,7 @@ export async function answerRoutes(fastify: FastifyInstance) {
 
   // GET /answer/stream - Server-Sent Events streaming answer
   fastify.get('/answer/stream', {
+    preHandler: optionalAuth,
     schema: {
       description: 'Get a streaming answer for a question using Server-Sent Events',
       tags: ['Answer'],

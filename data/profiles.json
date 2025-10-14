@@ -5,7 +5,7 @@
       "data": {
         "lieblingsfarbe": "blau"
       },
-      "lastUpdated": 1758111224057
+      "lastUpdated": 1760427204016
     },
     "nein": {
       "name": "nein",
@@ -17,17 +17,26 @@
     "hallo": {
       "name": "hallo",
       "data": {
-        "meine lieblingsfarbe": "rot"
+        "meine lieblingsfarbe": "rot",
+        "was": "meine lielingsfarbe"
       },
-      "lastUpdated": 1758111804418
+      "lastUpdated": 1760362326465
     },
     "also": {
       "name": "also",
       "data": {
-        "meine leiblingsfarbe": "rot"
+        "meine leiblingsfarbe": "rot",
+        "meine lieblingsfarbe": "blau"
       },
-      "lastUpdated": 1758113642376
+      "lastUpdated": 1760357664726
+    },
+    "als": {
+      "name": "als",
+      "data": {
+        "was": "meine lieblingsfarbe"
+      },
+      "lastUpdated": 1760357680777
     }
   },
-  "lastSaved": 1758113642377
+  "lastSaved": 1760427204017
 }

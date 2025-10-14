@@ -58,10 +58,20 @@ export async function optionalAuth(
     // Get session from request
     const session = getSession(request);
     
+    console.log('🔐 Optional auth check:', {
+      hasSid: !!session.sid,
+      hasUserId: !!session.userId,
+      sessionId: session.sid?.substring(0, 8),
+      userId: session.userId?.substring(0, 8)
+    });
+    
     if (session.sid && session.userId) {
       // Attach userId and session ID to request
       request.userId = session.userId;
       request.sid = session.sid;
+      console.log('✅ User authenticated:', session.userId.substring(0, 8));
+    } else {
+      console.log('⚠️ No valid session found');
     }
     
   } catch (error) {

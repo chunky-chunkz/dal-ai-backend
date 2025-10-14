@@ -19,13 +19,22 @@ interface AuthenticatedRequest extends FastifyRequest {
 }
 
 /**
- * Extract user ID from authenticated request
+ * Extract user ID from authenticated request or session header
  */
 function getUserId(request: AuthenticatedRequest): string {
-  if (!request.user?.id) {
-    throw new Error('User not authenticated');
+  // Try authenticated user first
+  if (request.user?.id) {
+    return request.user.id;
   }
-  return request.user.id;
+  
+  // Fallback to x-session-id header
+  const sessionId = request.headers['x-session-id'] as string;
+  if (sessionId) {
+    console.log('🔍 Using session ID from header:', sessionId);
+    return sessionId;
+  }
+  
+  throw new Error('User not authenticated and no session ID provided');
 }
 
 /**
@@ -113,16 +122,19 @@ export async function memoryRoutes(fastify: FastifyInstance) {
    * Confirm and save suggested memories
    */
   fastify.post<{
-    Body: { items: MemoryItem[] }
+    Body: { items?: MemoryItem[], suggestionIds?: string[] }
   }>('/memory/confirm', {
     schema: {
       body: {
         type: 'object',
-        required: ['items'],
         properties: {
           items: {
             type: 'array',
             items: { type: 'object' }
+          },
+          suggestionIds: {
+            type: 'array',
+            items: { type: 'string' }
           }
         }
       }
@@ -130,13 +142,26 @@ export async function memoryRoutes(fastify: FastifyInstance) {
   }, async (request: AuthenticatedRequest, reply: FastifyReply) => {
     try {
       const userId = getUserId(request);
-      const { items } = request.body as { items: MemoryItem[] };
+      const body = request.body as { items?: MemoryItem[], suggestionIds?: string[] };
       
-      console.log(`✅ Confirming ${items.length} memory suggestions for user: ${userId}`);
+      // Support both formats: items array or suggestionIds array
+      const items = body.items || [];
+      const suggestionIds = body.suggestionIds || [];
+      
+      console.log(`✅ Confirming memory suggestions for user: ${userId}`);
+      console.log(`   Items: ${items.length}, SuggestionIds: ${suggestionIds.length}`);
+      
+      if (items.length === 0 && suggestionIds.length === 0) {
+        return reply.status(400).send({
+          success: false,
+          error: 'No items or suggestionIds provided'
+        });
+      }
       
       const savedMemories: MemoryItem[] = [];
       const errors: string[] = [];
       
+      // Process items if provided
       for (const item of items) {
         try {
           // Validate that the suggestion belongs to the user
@@ -153,13 +178,20 @@ export async function memoryRoutes(fastify: FastifyInstance) {
         }
       }
       
+      // If only suggestionIds provided, log them (in a real implementation, you'd fetch and save them)
+      if (suggestionIds.length > 0) {
+        console.log(`📝 Suggestion IDs to confirm: ${suggestionIds.join(', ')}`);
+        // TODO: Implement fetching suggestions by ID and saving them
+        errors.push('Direct suggestionId confirmation not yet implemented. Please provide full items.');
+      }
+      
       return reply.send({
         success: true,
         data: {
           saved: savedMemories,
           errors: errors,
           stats: {
-            requested: items.length,
+            requested: items.length + suggestionIds.length,
             saved: savedMemories.length,
             failed: errors.length
           }
@@ -179,14 +211,17 @@ export async function memoryRoutes(fastify: FastifyInstance) {
    * Reject suggested memories
    */
   fastify.post<{
-    Body: { ids: string[] }
+    Body: { ids?: string[], suggestionIds?: string[] }
   }>('/memory/reject', {
     schema: {
       body: {
         type: 'object',
-        required: ['ids'],
         properties: {
           ids: {
+            type: 'array',
+            items: { type: 'string' }
+          },
+          suggestionIds: {
             type: 'array',
             items: { type: 'string' }
           }
@@ -196,18 +231,21 @@ export async function memoryRoutes(fastify: FastifyInstance) {
   }, async (request: AuthenticatedRequest, reply: FastifyReply) => {
     try {
       const userId = getUserId(request);
-      const { ids } = request.body as { ids: string[] };
+      const body = request.body as { ids?: string[], suggestionIds?: string[] };
       
-      console.log(`🚫 User ${userId} rejected ${ids.length} memory suggestions`);
+      // Support both formats: ids or suggestionIds
+      const idsToReject = body.ids || body.suggestionIds || [];
+      
+      console.log(`🚫 User ${userId} rejected ${idsToReject.length} memory suggestions`);
       
       // Currently a no-op - in future could store rejection patterns for learning
       
       return reply.send({
         success: true,
-        message: `Rejected ${ids.length} suggestions`,
+        message: `Rejected ${idsToReject.length} suggestions`,
         data: {
-          rejectedIds: ids,
-          count: ids.length
+          rejectedIds: idsToReject,
+          count: idsToReject.length
         }
       });
     } catch (error) {

@@ -1,19 +1,37 @@
 import { describe, it, expect, beforeEach, afterAll } from 'vitest';
-import { PrismaClient } from '@prisma/client';
+import { promises as fs } from 'fs';
+import { join } from 'path';
 import * as userRepo from '../users/user.repo';
 
-const prisma = new PrismaClient();
+const DATA_DIR = join(process.cwd(), 'data');
+const USERS_FILE = join(DATA_DIR, 'users.json');
+const BACKUP_FILE = join(DATA_DIR, 'users.json.backup');
 
-describe('User Repository (Prisma)', () => {
+describe('User Repository (JSON)', () => {
   beforeEach(async () => {
-    // Clean up the database before each test
-    await prisma.user.deleteMany();
+    // Backup existing users file if it exists
+    try {
+      await fs.access(USERS_FILE);
+      await fs.copyFile(USERS_FILE, BACKUP_FILE);
+    } catch {
+      // File doesn't exist, no backup needed
+    }
+    
+    // Clean up the users file before each test
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    await fs.writeFile(USERS_FILE, JSON.stringify([], null, 2), 'utf-8');
   });
 
   afterAll(async () => {
-    // Clean up and disconnect after all tests
-    await prisma.user.deleteMany();
-    await prisma.$disconnect();
+    // Restore backup if it exists
+    try {
+      await fs.access(BACKUP_FILE);
+      await fs.copyFile(BACKUP_FILE, USERS_FILE);
+      await fs.unlink(BACKUP_FILE);
+    } catch {
+      // No backup to restore, just clean up
+      await fs.writeFile(USERS_FILE, JSON.stringify([], null, 2), 'utf-8');
+    }
   });
 
   it('should create a new user', async () => {
