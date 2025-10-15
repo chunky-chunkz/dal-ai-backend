@@ -220,18 +220,41 @@ async function extractWithLLM(utterance: string): Promise<Candidate[]> {
   }
   
   try {
+    // Extract JSON from response - it might have extra text before/after
+    const trimmed = response.trim();
+    
+    // Try to find JSON array or object in the response
+    let jsonStr = trimmed;
+    
+    // Look for JSON array
+    const arrayMatch = trimmed.match(/\[[\s\S]*?\]/);
+    if (arrayMatch) {
+      jsonStr = arrayMatch[0];
+    } else {
+      // Look for JSON object
+      const objectMatch = trimmed.match(/\{[\s\S]*?\}/);
+      if (objectMatch) {
+        jsonStr = objectMatch[0];
+      }
+    }
+    
+    console.log('🔍 Extracted JSON from LLM response:', jsonStr);
+    
     // Try to parse the JSON response
-    const parsed = JSON.parse(response.trim());
+    const parsed = JSON.parse(jsonStr);
     
     if (Array.isArray(parsed)) {
+      console.log(`✅ Parsed ${parsed.length} candidates from LLM`);
       return parsed.filter(isValidCandidate);
     } else if (isValidCandidate(parsed)) {
+      console.log('✅ Parsed 1 candidate from LLM');
       return [parsed];
     }
     
     return [];
   } catch (parseError) {
     console.warn('Failed to parse LLM response as JSON:', response);
+    console.warn('Parse error:', parseError instanceof Error ? parseError.message : 'Unknown');
     return [];
   }
 }

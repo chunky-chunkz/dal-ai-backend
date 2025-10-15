@@ -1,0 +1,10 @@
+Persönliche Informationen über Dzhangr:
+
+Die Lieblingsautomarke von Dzhangr ist Mercedes.
+Dzhangr arbeitet als Software-Entwickler.
+Dzhangr wohnt in der Schweiz.
+
+Weitere Präferenzen:
+- Lieblingsfarbe: Rot
+- Lieblingssport: Basketball
+- Lieblingsessen: Pizza

@@ -18,6 +18,7 @@ import { registerLocalAuthRoutes } from './auth/local.routes.js';
 import { registerUserRoutes } from './routes/user.routes.js';
 import { profileRoutes } from './routes/profile.routes.js';
 import { memoryRoutes } from './routes/memory.routes.js';
+import { documentRoutes } from './routes/document.routes.js';
 
 export async function buildApp(): Promise<FastifyInstance> {
   // Create Fastify instance with logging
@@ -151,6 +152,9 @@ export async function buildApp(): Promise<FastifyInstance> {
   
   // Register memory routes with /api prefix (protected endpoints)
   await fastify.register(memoryRoutes, { prefix: '/api' });
+  
+  // Register document routes with /api prefix
+  await fastify.register(documentRoutes, { prefix: '/api' });
 
   return fastify;
 }

@@ -3,9 +3,9 @@
     "meine": {
       "name": "meine",
       "data": {
-        "lieblingsfarbe": "blau"
+        "lieblingsfarbe": "pink"
       },
-      "lastUpdated": 1760427204016
+      "lastUpdated": 1760511099414
     },
     "nein": {
       "name": "nein",
@@ -38,5 +38,5 @@
       "lastUpdated": 1760357680777
     }
   },
-  "lastSaved": 1760427204017
+  "lastSaved": 1760511099414
 }

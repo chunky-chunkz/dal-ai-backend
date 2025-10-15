@@ -11,6 +11,7 @@ import { chooseModel } from './modelRouter.js';
 import { getContext, putTurn } from '../memory/sessionMemory.js';
 import { hybridSearch, type HybridSearchResult } from './hybridSearch.js';
 import { smartFallback } from './smartFallback.js';
+import { searchDocuments, type DocumentSearchResult } from '../services/document.service.js';
 
 // Vector store search result interface (using the actual vectorStore interface)
 interface VectorSearchResult {
@@ -173,8 +174,8 @@ export async function ragLocalAnswer(question: string, k: number = 3, sessionId?
       });
     }
 
-    // Step 1: Retrieve relevant documents using hybrid or vector search
-    let searchResults: VectorSearchResult[];
+    // Step 1: Retrieve relevant documents using hybrid or vector search + document chunks
+    let searchResults: VectorSearchResult[] = [];
     
     if (useHybridSearch) {
       console.log('🔬 Using hybrid search');
@@ -184,6 +185,30 @@ export async function ragLocalAnswer(question: string, k: number = 3, sessionId?
       console.log('🔍 Using vector search');
       searchResults = await vectorStore.search(question, k);
     }
+    
+    // Also search uploaded documents
+    console.log('📚 Searching uploaded documents...');
+    const docResults = await searchDocuments(question, k);
+    
+    // Convert document results to VectorSearchResult format
+    const docVectorResults: VectorSearchResult[] = docResults.map(doc => ({
+      id: `doc:${doc.documentId}:chunk:${doc.chunkIndex}`,
+      text: doc.text,
+      score: doc.score,
+      metadata: {
+        type: 'document',
+        documentId: doc.documentId,
+        filename: doc.filename,
+        chunkIndex: doc.chunkIndex
+      }
+    }));
+    
+    // Merge FAQ and document results, sort by score
+    searchResults = [...searchResults, ...docVectorResults]
+      .sort((a, b) => b.score - a.score)
+      .slice(0, k * 2); // Keep more results since we have two sources
+    
+    console.log(`📊 Combined search: ${searchResults.length} results (${docResults.length} from documents)`);
     
     if (searchResults.length === 0) {
       return {

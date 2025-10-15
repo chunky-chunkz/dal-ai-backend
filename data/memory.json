@@ -111,6 +111,28 @@
       "confidence": 0.92,
       "createdAt": "2025-10-14T07:33:23.447Z",
       "updatedAt": "2025-10-14T07:33:23.447Z"
+    },
+    {
+      "id": "mem_1760443123008_0smovpec0",
+      "userId": "2890bb90ef3fca171ec9ecab81c5eb95",
+      "person": "dzhangr",
+      "type": "preference",
+      "key": "lieblingsmarke",
+      "value": "mercedes",
+      "confidence": 0.95,
+      "createdAt": "2025-10-14T11:58:43.008Z",
+      "updatedAt": "2025-10-14T11:58:43.008Z"
+    },
+    {
+      "id": "mem_1760511232958_1pyrmibsh",
+      "userId": "2890bb90ef3fca171ec9ecab81c5eb95",
+      "person": "self",
+      "type": "profile_fact",
+      "key": "name",
+      "value": "hall",
+      "confidence": 1,
+      "createdAt": "2025-10-15T06:53:52.958Z",
+      "updatedAt": "2025-10-15T06:53:52.958Z"
     }
   ]
 }

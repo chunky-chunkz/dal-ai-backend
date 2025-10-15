@@ -1,0 +1,22 @@
+Dokumenten-Pipeline Test-Dokument
+
+Dies ist ein Test-Dokument für die neue Dokumenten-Pipeline.
+
+Über das System:
+Das System kann jetzt .txt Dateien verarbeiten, in Chunks aufteilen, embedden und durchsuchbar machen.
+
+Wichtige Features:
+- Automatisches Chunking in 500-1000 Zeichen
+- Semantische Suche mit Embeddings
+- Memory-Extraktion aus Dokumenten
+- Integration mit RAG-System
+
+Beispiel-Fakten:
+Die Lieblingsfarbe von Roman ist blau.
+Maria arbeitet als Software-Entwicklerin in Berlin.
+Das Projekt verwendet TypeScript und Node.js.
+
+Technische Details:
+Die Dokumenten-Pipeline nutzt die bestehende Embedding-Infrastruktur und speichert alle Chunks in docs_index.json. Jedes Dokument wird in mehrere Chunks aufgeteilt, die separat durchsucht werden können.
+
+Bei der Verarbeitung werden automatisch Fakten extrahiert und können in der Memory gespeichert werden.
