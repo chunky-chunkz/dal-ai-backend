@@ -36,7 +36,14 @@
         "was": "meine lieblingsfarbe"
       },
       "lastUpdated": 1760357680777
+    },
+    "mein": {
+      "name": "mein",
+      "data": {
+        "lieblingsfarbe": "jetzt rot."
+      },
+      "lastUpdated": 1760519525481
     }
   },
-  "lastSaved": 1760511099414
+  "lastSaved": 1760519525482
 }

@@ -49,10 +49,13 @@ export async function documentRoutes(fastify: FastifyInstance) {
       const userId = (request as AuthenticatedRequest).userId || body.userId;
       
       // Check file extension
-      if (!filename.endsWith('.txt')) {
+      const isValidFile = filename.endsWith('.txt') || 
+                         filename.toLowerCase().endsWith('.pdf') ||
+                         filename.toLowerCase().endsWith('.docx');
+      if (!isValidFile) {
         return reply.status(400).send({
           success: false,
-          error: 'Only .txt files are currently supported'
+          error: 'Only .txt, .pdf and .docx files are currently supported'
         });
       }
       

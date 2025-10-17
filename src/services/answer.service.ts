@@ -41,8 +41,18 @@ const faqRepository = new FaqRepository();
 /**
  * Generate direct chat response using local LLM without RAG/FAQ
  */
-async function generateDirectChatResponse(question: string, sessionId?: string, memoryContext?: string): Promise<AnswerResponse> {
+async function generateDirectChatResponse(
+  question: string, 
+  sessionId?: string, 
+  memoryContext?: string, 
+  settings?: UserSettings
+): Promise<AnswerResponse> {
   try {
+    // Extract settings with defaults
+    const temperature = settings?.temperature ?? 0.7;
+    const maxTokens = settings?.maxTokens ?? 300;
+    const preferredModel = settings?.model ?? 'phi3';
+
     // Build conversational prompt
     let prompt = '';
     
@@ -53,7 +63,7 @@ async function generateDirectChatResponse(question: string, sessionId?: string, 
     
     // Add conversation history if sessionId provided
     if (sessionId) {
-      const conversationHistory = getContext(sessionId, 6); // Last 6 turns
+      const conversationHistory = getContext(sessionId, 6); // Default 6 turns
       if (conversationHistory.length > 0) {
         prompt += `Verlauf:\n`;
         for (const turn of conversationHistory) {
@@ -69,19 +79,36 @@ async function generateDirectChatResponse(question: string, sessionId?: string, 
     // System prompt for normal conversation
     const systemPrompt = `Du bist ein hilfsbreiter, freundlicher deutschsprachiger AI-Assistent. Antworte natürlich und persönlich auf Fragen. Nutze die bereitgestellten Informationen über den Benutzer, um deine Antworten zu personalisieren. Antworte in 1-3 Sätzen, sei präzise und freundlich.`;
 
-    // Try different models until one works
-    const modelsToTry = ['llama3.2', 'llama3.1', 'llama3', 'phi3', 'phi3:mini', 'qwen2', 'mistral'];
+    // Try different models, starting with user's preferred model
+    // Erweiterte Liste mit Premium-Modellen
+    const modelsToTry = [
+      preferredModel, 
+      // Llama Familie
+      'llama3.2', 'llama3.1', 'llama3',
+      // Phi Familie
+      'phi3', 'phi3:mini', 'phi3:medium',
+      // Mistral Familie
+      'mistral', 'mistral-nemo',
+      // Code-Modelle
+      'codellama', 'deepseek-coder',
+      // Weitere
+      'qwen2', 'gemma', 'command-r'
+    ];
+    // Remove duplicates while preserving order
+    const uniqueModels = [...new Set(modelsToTry)];
     
-    for (const model of modelsToTry) {
+    for (const model of uniqueModels) {
       try {
-        // Call local LLM
+        // Call local LLM with user settings
         const response = await localLLM.generate({
           model,
           prompt,
           system: systemPrompt,
-          temperature: 0.7,
-          maxTokens: 300
+          temperature,
+          maxTokens
         });
+
+        console.log(`✅ Generated response with model ${model} (temp: ${temperature}, tokens: ${maxTokens})`);
 
         return {
           answer: response || 'Entschuldigung, ich konnte keine Antwort generieren.',
@@ -195,25 +222,35 @@ function formatMemorySuggestions(suggestions: Array<{ key: string; value: string
 async function getMemoryContext(userId: string): Promise<string> {
   try {
     console.log('🧠 Getting memory context for userId:', userId);
-    const memories = await listByUser(userId);
-    console.log('📚 Found memories:', memories.length);
     
-    if (memories.length === 0) {
-      console.log('❌ No memories found for user');
+    // Get user-specific memories
+    const userMemories = await listByUser(userId);
+    console.log('📚 Found user-specific memories:', userMemories.length);
+    
+    // Get global knowledge (from documents uploaded without login)
+    const globalMemories = await listByUser('global-knowledge');
+    console.log('🌍 Found global knowledge memories:', globalMemories.length);
+    
+    // Combine both
+    const allMemories = [...userMemories, ...globalMemories];
+    
+    if (allMemories.length === 0) {
+      console.log('❌ No memories found');
       return '';
     }
     
     // Format memories as context
-    const memoryLines = memories
-      .filter(m => m.type === 'preference' || m.type === 'profile_fact')
-      .slice(-5) // Last 5 memories to avoid too much context
+    const memoryLines = allMemories
+      .filter(m => m.type === 'preference' || m.type === 'profile_fact' || m.type === 'fact')
+      .slice(-10) // Last 10 memories to avoid too much context (5 user + 5 global)
       .map(m => {
-        console.log('  📝 Memory:', m.key, '=', m.value);
-        return `${m.key}: ${m.value}`;
+        const source = m.userId === 'global-knowledge' ? '(Allgemeines Wissen)' : '(Persönlich)';
+        console.log(`  📝 Memory ${source}:`, m.key, '=', m.value);
+        return `${m.key}: ${m.value} ${source}`;
       })
       .join('\n');
     
-    const context = memoryLines ? `Benutzer-Kontext:\n${memoryLines}\n` : '';
+    const context = memoryLines ? `Verfügbare Informationen:\n${memoryLines}\n` : '';
     console.log('✅ Memory context created:', context ? 'YES' : 'NO');
     return context;
   } catch (error) {
@@ -223,13 +260,34 @@ async function getMemoryContext(userId: string): Promise<string> {
 }
 
 /**
+ * User settings interface for customizing AI behavior
+ */
+export interface UserSettings {
+  model?: string;
+  temperature?: number;
+  maxTokens?: number;
+  useRAG?: boolean;
+  topK?: number;
+  similarityThreshold?: number;
+  streamResponse?: boolean;
+}
+
+/**
  * Main function to get answers for questions using RAG
  * @param question The user's question
  * @param sessionId Session identifier for conversation memory
  * @param memoryContext User-specific memory context to personalize responses
+ * @param userId User identifier for personalization
+ * @param settings Optional user settings to customize AI behavior
  * @returns Promise with answer, confidence, and optional sourceId
  */
-export async function answerQuestion(question: string, sessionId?: string, memoryContext?: string, userId?: string): Promise<AnswerResponse> {
+export async function answerQuestion(
+  question: string, 
+  sessionId?: string, 
+  memoryContext?: string, 
+  userId?: string,
+  settings?: UserSettings
+): Promise<AnswerResponse> {
   try {
     // Validate input
     if (!question || question.trim().length < 3) {
@@ -330,8 +388,19 @@ export async function answerQuestion(question: string, sessionId?: string, memor
     }
 
     console.log('🤖 Generating new answer with LLM...');
-    // Use direct LLM response instead of RAG for normal chat (with enhanced memory context)
-    const result = await generateDirectChatResponse(processedQuestion, sessionId, enhancedMemoryContext);
+    
+    // Log settings being used
+    if (settings) {
+      console.log('⚙️ Using custom settings:', {
+        model: settings.model,
+        temperature: settings.temperature,
+        maxTokens: settings.maxTokens,
+        useRAG: settings.useRAG
+      });
+    }
+    
+    // Use direct LLM response instead of RAG for normal chat (with enhanced memory context and settings)
+    const result = await generateDirectChatResponse(processedQuestion, sessionId, enhancedMemoryContext, settings);
 
     // Save user question and assistant answer to session memory
     if (sessionId) {

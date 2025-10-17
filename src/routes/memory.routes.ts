@@ -495,4 +495,155 @@ export async function memoryRoutes(fastify: FastifyInstance) {
       });
     }
   });
+
+  /**
+   * GET /memory/global
+   * Get global knowledge base (memories extracted from documents)
+   * Accessible to all users
+   */
+  fastify.get('/memory/global', {
+    schema: {
+      description: 'Get global knowledge base from uploaded documents',
+      tags: ['Memory'],
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            data: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  type: { type: 'string' },
+                  key: { type: 'string' },
+                  value: { type: 'string' },
+                  confidence: { type: 'number' },
+                  createdAt: { type: 'string' },
+                  updatedAt: { type: 'string' }
+                }
+              }
+            },
+            count: { type: 'number' },
+            summary: {
+              type: 'object',
+              properties: {
+                byType: { type: 'object' },
+                totalFacts: { type: 'number' }
+              }
+            }
+          }
+        }
+      }
+    }
+  }, async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      console.log('🌍 Retrieving global knowledge base...');
+      
+      // Get all global-knowledge memories
+      const globalMemories = await listByUser('global-knowledge');
+      
+      // Calculate statistics
+      const byType: Record<string, number> = {};
+      globalMemories.forEach(memory => {
+        byType[memory.type] = (byType[memory.type] || 0) + 1;
+      });
+      
+      return reply.send({
+        success: true,
+        data: globalMemories,
+        count: globalMemories.length,
+        summary: {
+          byType,
+          totalFacts: globalMemories.length
+        }
+      });
+    } catch (error) {
+      console.error('❌ Error retrieving global knowledge:', error);
+      return reply.status(500).send({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  /**
+   * GET /memory/all-users
+   * Get memories from all users (from user_memories.json)
+   * Accessible to all users - for displaying consolidated knowledge
+   */
+  fastify.get('/memory/all-users', {
+    schema: {
+      description: 'Get memories from all users in the system',
+      tags: ['Memory'],
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            data: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  userId: { type: 'string' },
+                  key: { type: 'string' },
+                  value: { type: 'string' },
+                  timestamp: { type: 'string' },
+                  context: { type: 'string' }
+                }
+              }
+            },
+            count: { type: 'number' }
+          }
+        }
+      }
+    }
+  }, async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      console.log('👥 Retrieving memories from all users...');
+      
+      // Read user_memories.json directly
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      const userMemoriesPath = path.join(process.cwd(), 'data', 'user_memories.json');
+      
+      let allUserMemories: any[] = [];
+      
+      try {
+        const fileContent = await fs.readFile(userMemoriesPath, 'utf-8');
+        const userMemoriesData = JSON.parse(fileContent);
+        
+        // Transform user_memories.json structure into flat array
+        for (const [userId, userData] of Object.entries(userMemoriesData)) {
+          const memories = (userData as any).memories || {};
+          for (const [key, memoryData] of Object.entries(memories)) {
+            allUserMemories.push({
+              userId,
+              key,
+              value: (memoryData as any).value,
+              timestamp: (memoryData as any).timestamp,
+              context: (memoryData as any).context
+            });
+          }
+        }
+      } catch (error) {
+        // If file doesn't exist or is empty, return empty array
+        console.log('ℹ️  No user_memories.json file found or empty');
+      }
+      
+      return reply.send({
+        success: true,
+        data: allUserMemories,
+        count: allUserMemories.length
+      });
+    } catch (error) {
+      console.error('❌ Error retrieving user memories:', error);
+      return reply.status(500).send({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
 }

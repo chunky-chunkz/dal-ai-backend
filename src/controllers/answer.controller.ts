@@ -17,7 +17,16 @@ const AnswerRequestSchema = z.object({
   question: z.string()
     .min(3, 'Question must be at least 3 characters long')
     .max(500, 'Question must not exceed 500 characters')
-    .trim()
+    .trim(),
+  settings: z.object({
+    model: z.string().optional(),
+    temperature: z.number().min(0).max(1).optional(),
+    maxTokens: z.number().min(50).max(2000).optional(),
+    useRAG: z.boolean().optional(),
+    topK: z.number().min(1).max(10).optional(),
+    similarityThreshold: z.number().min(0.3).max(0.95).optional(),
+    streamResponse: z.boolean().optional()
+  }).optional()
 });
 
 /**
@@ -79,7 +88,7 @@ export async function postAnswer(
       return;
     }
 
-    const { question } = validationResult.data;
+    const { question, settings } = validationResult.data;
 
     // Extract or create sessionId
     const sessionId = extractOrCreateSessionId(request);
@@ -91,8 +100,13 @@ export async function postAnswer(
       question: question.substring(0, 50),
       sessionId,
       userId: userId || 'anonymous',
-      hasAuth: !!userId
+      hasAuth: !!userId,
+      hasSettings: !!settings
     });
+
+    if (settings) {
+      console.log('⚙️ Custom settings received:', settings);
+    }
 
     // If user is logged in, extract and store memories from the question
     // NOTE: Memory processing is now handled by the new memory system in answer.service.ts
@@ -107,8 +121,8 @@ export async function postAnswer(
     //   memoryContext = await createMemoryContext(userId);
     // }
 
-    // Call answer service with sessionId, memory context, and userId for memory integration
-    const result = await answerQuestion(question, sessionId, memoryContext, userId);
+    // Call answer service with sessionId, memory context, userId for memory integration, and settings
+    const result = await answerQuestion(question, sessionId, memoryContext, userId, settings);
 
     // Return JSON response
     await reply.status(200).send({

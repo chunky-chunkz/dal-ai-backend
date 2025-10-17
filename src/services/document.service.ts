@@ -9,6 +9,11 @@ import path from 'path';
 import { embedTexts } from '../ai/embeddings.js';
 import { extractCandidates } from '../memory/extractor.js';
 import { upsert } from '../memory/store.js';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const pdfParse = require('pdf-parse');
+const mammoth = require('mammoth');
 
 // Document storage paths
 const DOCS_DIR = path.join(process.cwd(), 'data', 'documents');
@@ -84,6 +89,32 @@ async function loadDocumentIndex(): Promise<DocumentIndex> {
 async function saveDocumentIndex(index: DocumentIndex): Promise<void> {
   await fs.writeFile(DOCS_INDEX_PATH, JSON.stringify(index, null, 2), 'utf-8');
   console.log('📄 Document index saved');
+}
+
+/**
+ * Extract text from PDF file
+ */
+async function extractPdfText(buffer: Buffer): Promise<string> {
+  try {
+    const data = await pdfParse(buffer);
+    return data.text || '';
+  } catch (error) {
+    console.error('❌ Error parsing PDF:', error);
+    throw new Error('Failed to parse PDF file');
+  }
+}
+
+/**
+ * Extract text from DOCX file
+ */
+async function extractDocxText(buffer: Buffer): Promise<string> {
+  try {
+    const result = await mammoth.extractRawText({ buffer });
+    return result.value || '';
+  } catch (error) {
+    console.error('❌ Error parsing DOCX:', error);
+    throw new Error('Failed to parse DOCX file');
+  }
 }
 
 /**
@@ -179,10 +210,26 @@ export async function processDocument(
     
     console.log(`📄 Processing document: ${filename}`);
     console.log(`   Document ID: ${documentId}`);
-    console.log(`   Content length: ${content.length} characters`);
+    
+    // Extract text based on file type
+    let textContent: string;
+    if (filename.toLowerCase().endsWith('.pdf')) {
+      console.log(`   📑 Extracting PDF text...`);
+      const buffer = Buffer.from(content, 'base64');
+      textContent = await extractPdfText(buffer);
+      console.log(`   ✅ Extracted ${textContent.length} characters from PDF`);
+    } else if (filename.toLowerCase().endsWith('.docx')) {
+      console.log(`   📝 Extracting DOCX text...`);
+      const buffer = Buffer.from(content, 'base64');
+      textContent = await extractDocxText(buffer);
+      console.log(`   ✅ Extracted ${textContent.length} characters from DOCX`);
+    } else {
+      textContent = content;
+      console.log(`   Content length: ${textContent.length} characters`);
+    }
     
     // Step 1: Chunk the text
-    const textChunks = chunkText(content);
+    const textChunks = chunkText(textContent);
     console.log(`   ✂️ Created ${textChunks.length} chunks`);
     
     // Step 2: Create embeddings for all chunks

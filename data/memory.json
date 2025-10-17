@@ -63,10 +63,10 @@
       "person": "self",
       "type": "preference",
       "key": "greeting_frequenz",
-      "value": "selten",
-      "confidence": 0.65,
+      "value": "gerne hören",
+      "confidence": 0.95,
       "createdAt": "2025-10-14T07:02:18.893Z",
-      "updatedAt": "2025-10-14T07:05:48.010Z"
+      "updatedAt": "2025-10-15T07:20:41.600Z"
     },
     {
       "id": "mem_1760425345837_sguxof854",
@@ -107,10 +107,10 @@
       "person": "self",
       "type": "preference",
       "key": "lieblingsfarbe",
-      "value": "blau",
-      "confidence": 0.92,
+      "value": "rot",
+      "confidence": 0.95,
       "createdAt": "2025-10-14T07:33:23.447Z",
-      "updatedAt": "2025-10-14T07:33:23.447Z"
+      "updatedAt": "2025-10-15T09:12:03.575Z"
     },
     {
       "id": "mem_1760443123008_0smovpec0",
@@ -129,10 +129,98 @@
       "person": "self",
       "type": "profile_fact",
       "key": "name",
-      "value": "hall",
-      "confidence": 1,
+      "value": "herr mandzhiev",
+      "confidence": 0.95,
       "createdAt": "2025-10-15T06:53:52.958Z",
-      "updatedAt": "2025-10-15T06:53:52.958Z"
+      "updatedAt": "2025-10-15T07:21:59.211Z"
+    },
+    {
+      "id": "mem_1760512366497_hx8lngbu9",
+      "userId": "2890bb90ef3fca171ec9ecab81c5eb95",
+      "person": "self",
+      "type": "preference",
+      "key": "greeting_frequency",
+      "value": "hallo häufig",
+      "confidence": 0.95,
+      "createdAt": "2025-10-15T07:12:46.497Z",
+      "updatedAt": "2025-10-15T07:12:46.497Z"
+    },
+    {
+      "id": "mem_1760512928733_9qwby8u88",
+      "userId": "2890bb90ef3fca171ec9ecab81c5eb95",
+      "person": "self",
+      "type": "profile_fact",
+      "key": "geschlecht",
+      "value": "männlich",
+      "confidence": 0.95,
+      "createdAt": "2025-10-15T07:22:08.733Z",
+      "updatedAt": "2025-10-15T07:22:08.733Z"
+    },
+    {
+      "id": "mem_1760512928745_n0mfjc000",
+      "userId": "2890bb90ef3fca171ec9ecab81c5eb95",
+      "person": "self",
+      "type": "preference",
+      "key": "sprachpraeferenz",
+      "value": "deutsch",
+      "confidence": 0.87,
+      "createdAt": "2025-10-15T07:22:08.745Z",
+      "updatedAt": "2025-10-15T07:22:08.745Z"
+    },
+    {
+      "id": "mem_1760519657619_fqjm303m8",
+      "userId": "7711bbe4aa11a0167313b3cb941ea9cc",
+      "person": "self",
+      "type": "preference",
+      "key": "motivationsstaerkung",
+      "value": "positives_motto",
+      "confidence": 0.89,
+      "createdAt": "2025-10-15T09:14:17.619Z",
+      "updatedAt": "2025-10-15T09:14:17.619Z"
+    },
+    {
+      "id": "mem_1760520360052_xp5ip7dut",
+      "userId": "7711bbe4aa11a0167313b3cb941ea9cc",
+      "person": "dzhangr",
+      "type": "preference",
+      "key": "lieblingsmarke",
+      "value": "mercedes",
+      "confidence": 0.95,
+      "createdAt": "2025-10-15T09:26:00.052Z",
+      "updatedAt": "2025-10-15T09:26:00.052Z"
+    },
+    {
+      "id": "mem_1760520404197_cip4mzu4t",
+      "userId": "7711bbe4aa11a0167313b3cb941ea9cc",
+      "person": "roman",
+      "type": "preference",
+      "key": "lieblingsmarke",
+      "value": "porsche",
+      "confidence": 0.95,
+      "createdAt": "2025-10-15T09:26:44.197Z",
+      "updatedAt": "2025-10-15T09:26:44.197Z"
+    },
+    {
+      "id": "mem_1760607983008_9k60brnkn",
+      "userId": "global-knowledge",
+      "person": "roman",
+      "type": "preference",
+      "key": "lieblingsmarke",
+      "value": "porsche",
+      "confidence": 0.95,
+      "createdAt": "2025-10-16T09:46:23.007Z",
+      "updatedAt": "2025-10-16T09:46:23.007Z"
+    },
+    {
+      "id": "mem_1760684843043_kue4dyval",
+      "userId": "global-knowledge",
+      "person": "dzhangr",
+      "type": "preference",
+      "key": "lieblingsmarke",
+      "value": "mercedes",
+      "confidence": 0.95,
+      "createdAt": "2025-10-17T07:07:23.042Z",
+      "updatedAt": "2025-10-17T07:07:23.042Z"
     }
   ]
 }
