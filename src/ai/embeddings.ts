@@ -47,7 +47,7 @@ class EmbeddingService {
     if (this.pipeline) return;
 
     try {
-      console.log(`🔧 Loading embedding model: ${this.model}`);
+  console.log(`🔧 Loading embedding model: ${this.model}`);
       this.pipeline = await pipeline('feature-extraction', this.model, {
         quantized: true
       }) as FeatureExtractionPipeline;
@@ -81,9 +81,9 @@ class EmbeddingService {
         return;
       }
 
-      this.cache = cache;
-      const cacheSize = Object.keys(cache.embeddings).length;
-      console.log(`📦 Loaded embedding cache with ${cacheSize} entries`);
+  this.cache = cache;
+  const cacheSize = Object.keys(cache.embeddings).length;
+  console.log(`📦 Loaded embedding cache with ${cacheSize} entries`);
 
     } catch (error) {
       console.warn('⚠️  Failed to load embedding cache, creating new:', error);
@@ -99,9 +99,21 @@ class EmbeddingService {
 
     try {
       await this.ensureDataDir();
-      await fs.writeFile(this.cachePath, JSON.stringify(this.cache, null, 2), 'utf-8');
+      // NO pretty-printing (null, 2) to avoid stack overflow with large caches
+      await fs.writeFile(this.cachePath, JSON.stringify(this.cache), 'utf-8');
+      const cacheSize = Object.keys(this.cache.embeddings).length;
+      console.log(`💾 Saved embedding cache with ${cacheSize} entries`);
     } catch (error) {
       console.error('❌ Failed to save embedding cache:', error);
+      // Fallback: try to save without cache entries if it's too large
+      try {
+        console.log('   🔁 Fallback: clearing cache and saving empty structure');
+        const emptyCacheStructure = this.createEmptyCache();
+        await fs.writeFile(this.cachePath, JSON.stringify(emptyCacheStructure), 'utf-8');
+        console.log('⚠️  Saved empty cache structure (fallback)');
+      } catch (fallbackError) {
+        console.error('❌ Failed to save even empty cache:', fallbackError);
+      }
     }
   }
 
@@ -181,6 +193,7 @@ class EmbeddingService {
           pooling: 'mean',
           normalize: true
         });
+        console.log('   📐 pipeline output dims:', embeddings?.dims);
 
         // Handle both single and batch results
         let embeddingArray: number[][];
@@ -199,6 +212,7 @@ class EmbeddingService {
             embeddingArray.push(Array.from(data.slice(start, end)));
           }
         }
+        console.log(`   ✅ got ${embeddingArray.length} vectors len=${embeddingArray[0]?.length}`);
 
         // Store results and update cache
         for (let i = 0; i < textsToProcess.length; i++) {
@@ -211,7 +225,9 @@ class EmbeddingService {
         }
 
         // Save updated cache
-        await this.saveCache();
+  await this.saveCache();
+  const cacheSize = Object.keys(this.cache.embeddings).length;
+  console.log(`   💾 cache saved. entries=${cacheSize}`);
 
       } catch (error) {
         console.error('❌ Failed to generate embeddings:', error);

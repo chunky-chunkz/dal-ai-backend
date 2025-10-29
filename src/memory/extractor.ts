@@ -23,7 +23,7 @@ const extractionRateLimiter = new ExtractionRateLimiter();
  * Based on recommended policy examples
  */
 const EXTRACTION_SYSTEM_PROMPT = `Extrahiere aus der deutschen Aussage nur langfristig sinnvolle, harmlose Fakten/Präferenzen.
-Antworte ausschließlich als JSON-Array von Objekten mit Feldern:
+Antworte ausschliesslich als JSON-Array von Objekten mit Feldern:
 person, type (preference|profile_fact|contact|task_hint), key, value, confidence (0..1).
 Speichere niemals geheime oder sensible Daten. Wenn nichts geeignet ist: [].
 
@@ -33,7 +33,7 @@ Beispiele:
 
 "Mein Passwort ist abc123" -> []
 
-"Ich heiße Anna." ->
+"Ich heisse Anna." ->
 [{"person":"self","type":"profile_fact","key":"name","value":"anna","confidence":0.85}]
 
 "Ich trinke gerne Kaffee am Morgen." ->
@@ -43,7 +43,7 @@ Beispiele:
 [{"person":"self","type":"profile_fact","key":"beruf","value":"software-entwickler","confidence":0.90},
  {"person":"self","type":"profile_fact","key":"arbeitsort","value":"berlin","confidence":0.85}]
 
-"Meine Adresse ist Musterstraße 123." -> []
+"Meine Adresse ist Musterstrasse 123." -> []
 
 "Ich mag dunkles Theme." ->
 [{"person":"self","type":"preference","key":"ui_theme","value":"dunkel","confidence":0.82}]

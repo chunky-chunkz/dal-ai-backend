@@ -26,9 +26,10 @@
       "name": "also",
       "data": {
         "meine leiblingsfarbe": "rot",
-        "meine lieblingsfarbe": "blau"
+        "meine lieblingsfarbe": "blau",
+        "was": "mein lieblingsname"
       },
-      "lastUpdated": 1760357664726
+      "lastUpdated": 1760971313294
     },
     "als": {
       "name": "als",
@@ -40,10 +41,18 @@
     "mein": {
       "name": "mein",
       "data": {
-        "lieblingsfarbe": "jetzt rot."
+        "lieblingsfarbe": "jetzt rot.",
+        "lieblingsname": "vlad"
       },
-      "lastUpdated": 1760519525481
+      "lastUpdated": 1760971299723
+    },
+    "in": {
+      "name": "in",
+      "data": {
+        "ansible.pdf was": "das domain unter welchem ansible läuft"
+      },
+      "lastUpdated": 1761140867347
     }
   },
-  "lastSaved": 1760519525482
+  "lastSaved": 1761140867347
 }

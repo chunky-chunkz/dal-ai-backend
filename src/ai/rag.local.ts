@@ -1,14 +1,16 @@
 /**
- * Task: Include memory context in RAG prompt.
- * - getContext(sessionId, 6) -> build concise "Verlauf" block: role: text (trim to 800 chars total)
- * - Add "Verlauf" above "Kontext" before the question
- * - After generating, append assistant turn to memory
+ * Task: Include persistent user memory context in RAG prompt.
+ * - retrieveForPrompt(userId, question) -> build user memory context
+ * - Enhanced Memory System handles conversation history via semantic search
+ * - Add memory contexts before the question
+ * - After generating, evaluate for new memories
  */
 
 import { localLLM } from './localLLM.js';
 import { vectorStore } from './vectorStore.js';
 import { chooseModel } from './modelRouter.js';
-import { getContext, putTurn } from '../memory/sessionMemory.js';
+import { retrieveForPrompt } from '../memory/retriever.js';
+import { evaluateAndMaybeStore } from '../memory/manager.js';
 import { hybridSearch, type HybridSearchResult } from './hybridSearch.js';
 import { smartFallback } from './smartFallback.js';
 import { searchDocuments, type DocumentSearchResult } from '../services/document.service.js';
@@ -94,9 +96,15 @@ function buildCompactGermanContext(searchResults: VectorSearchResult[]): string 
 }
 
 /**
- * Build system and user prompts for Sunrise support including conversation memory
+ * Build system and user prompts for Sunrise support including persistent memory and conversation history
  */
-function buildSunrisePromptsWithMemory(question: string, searchResults: VectorSearchResult[], sessionId?: string, userContext?: string): { system: string; prompt: string } {
+async function buildSunrisePromptsWithMemory(
+  question: string, 
+  searchResults: VectorSearchResult[], 
+  userId?: string,
+  sessionId?: string, 
+  userContext?: string
+): Promise<{ system: string; prompt: string }> {
   const context = buildCompactGermanContext(searchResults);
   
   // Improved system prompt: concise, strict
@@ -104,34 +112,34 @@ function buildSunrisePromptsWithMemory(question: string, searchResults: VectorSe
   
   let prompt = '';
   
+  // Add persistent user memory context if userId provided
+  if (userId) {
+    try {
+      const { context: memoryContext } = await retrieveForPrompt(userId, question, 5);
+      if (memoryContext.trim()) {
+        prompt += `${memoryContext}\n`;
+      }
+    } catch (error) {
+      console.error('❌ Error retrieving user memory:', error);
+    }
+  }
+  
   // Add user-specific context if provided
   if (userContext && userContext.trim()) {
     prompt += `${userContext}\n`;
   }
   
-  // Add conversation memory if sessionId provided
+  // Enhanced Memory System now handles conversation history via semantic search
+  // Recent conversations are retrieved based on relevance to current question
+  // Additional conversation context can be retrieved via retrieveForPrompt() if needed
   if (sessionId) {
-    const memoryContext = getContext(sessionId, 6); // Get last 6 turns
-    if (memoryContext.length > 0) {
-      prompt += `Verlauf:\n`;
-      let totalChars = 0;
-      for (const turn of memoryContext) {
-        const roleText = turn.role === "user" ? "Benutzer" : "Assistent";
-        const turnText = `${roleText}: ${turn.text}`;
-        
-        // Limit total memory to ~800 chars
-        if (totalChars + turnText.length > 800) {
-          const remaining = 800 - totalChars;
-          if (remaining > 20) { // Only add if meaningful length remains
-            prompt += `${turnText.substring(0, remaining)}...\n`;
-          }
-          break;
-        }
-        
-        prompt += `${turnText}\n`;
-        totalChars += turnText.length;
+    try {
+      const { context: conversationMemory } = await retrieveForPrompt(sessionId, question, 3);
+      if (conversationMemory.trim()) {
+        prompt += `Letzte Gespräche:\n${conversationMemory}\n`;
       }
-      prompt += `\n`;
+    } catch (error) {
+      console.error('❌ Error retrieving conversation memory:', error);
     }
   }
   
@@ -165,14 +173,8 @@ function buildSunrisePrompts(question: string, searchResults: VectorSearchResult
  */
 export async function ragLocalAnswer(question: string, k: number = 3, sessionId?: string, useHybridSearch: boolean = false, userContext?: string): Promise<RagResponse> {
   try {
-    // Store user turn in memory if sessionId provided
-    if (sessionId) {
-      putTurn(sessionId, {
-        role: "user",
-        text: question,
-        ts: Date.now()
-      });
-    }
+    // Enhanced Memory System handles conversation storage automatically
+    // Memories are extracted via evaluateAndMaybeStore() after response generation
 
     // Step 1: Retrieve relevant documents using hybrid or vector search + document chunks
     let searchResults: VectorSearchResult[] = [];
@@ -223,7 +225,7 @@ export async function ragLocalAnswer(question: string, k: number = 3, sessionId?
     const selectedModel = chooseModel(topVecScore, question.length);
 
     // Step 3: Build system and user prompts with memory context
-    const { system, prompt } = buildSunrisePromptsWithMemory(question, searchResults, sessionId, userContext);
+    const { system, prompt } = await buildSunrisePromptsWithMemory(question, searchResults, sessionId, sessionId, userContext);
 
     // Step 4: Generate answer using smart fallback (local first, cloud if needed)
     const smartResult = await smartFallback(
@@ -234,14 +236,16 @@ export async function ragLocalAnswer(question: string, k: number = 3, sessionId?
       searchResults.map(result => result.id)
     );
 
-    // Step 5: Store assistant turn in memory if sessionId provided
+    // Step 5: Evaluate answer for new memories (async, don't block response)
     if (sessionId) {
-      putTurn(sessionId, {
-        role: "assistant", 
-        text: smartResult.answer.trim(),
-        ts: Date.now()
+      // Extract and store new memories from user utterance
+      evaluateAndMaybeStore(sessionId, question).catch(error => {
+        console.error('❌ Error evaluating memory:', error);
       });
     }
+
+    // Enhanced Memory System now handles conversation storage automatically
+    // No need for manual putTurn() calls
 
     return {
       answer: smartResult.answer,
@@ -325,7 +329,7 @@ export function ragLocalAnswerStream(
 
       // Step 3: Build compact German context (numbered, trimmed) + system/user prompts
       const { system, prompt } = sessionId 
-        ? buildSunrisePromptsWithMemory(question, searchResults, sessionId)
+        ? await buildSunrisePromptsWithMemory(question, searchResults, sessionId, sessionId)
         : buildSunrisePrompts(question, searchResults);
 
       // Step 4: Call localLLM.stream with selected model

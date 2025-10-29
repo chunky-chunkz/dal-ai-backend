@@ -221,7 +221,7 @@ export class MemoryCategorizerEnhanced {
     const lower = value.toLowerCase();
     
     // Color detection
-    const colors = ['rot', 'blau', 'grün', 'gelb', 'schwarz', 'weiß', 'grau', 'braun', 'orange', 'lila', 'rosa'];
+    const colors = ['rot', 'blau', 'grün', 'gelb', 'schwarz', 'weiss', 'grau', 'braun', 'orange', 'lila', 'rosa'];
     colors.forEach(color => {
       if (lower.includes(color)) tags.push(`farbe:${color}`);
     });

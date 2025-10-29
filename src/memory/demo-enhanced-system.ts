@@ -43,7 +43,7 @@ class MemorySystemDemo {
 
     // Test various types of information
     const testUtterances = [
-      'Ich heiße Anna Müller und wohne in Berlin.',
+      'Ich heisse Anna Müller und wohne in Berlin.',
       'Meine Lieblingsfarbe ist blau und ich mag italienisches Essen.',
       'Ich arbeite als Software-Entwicklerin bei Microsoft.',
       'Jeden Morgen trinke ich Kaffee und lese die Nachrichten.'
@@ -250,7 +250,7 @@ class MemorySystemDemo {
     };
 
     const germanSpecificUtterances = [
-      'Ich möchte gerne Fußball schauen, aber nur Bundesliga.', // Umlauts, compound words
+      'Ich möchte gerne Fussball schauen, aber nur Bundesliga.', // Umlauts, compound words
       'Mein Lieblingsgericht ist Sauerbraten mit Rotkohl.', // Cultural specifics
       'Ich wohne in München-Schwabing in einer Dreizimmerwohnung.', // German addressing
       'Jeden Donnerstag gehe ich zum Bäcker um die Ecke.', // German weekly patterns
@@ -281,7 +281,7 @@ class MemorySystemDemo {
 
     // Test batch processing
     const batchUtterances = Array.from({ length: 10 }, (_, i) => 
-      `Ich mag Aktivität ${i + 1} und das macht mir Spaß am ${['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag'][i % 5]}.`
+      `Ich mag Aktivität ${i + 1} und das macht mir Spass am ${['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag'][i % 5]}.`
     );
 
     console.log(`\n   ⏱️  Processing ${batchUtterances.length} utterances...`);

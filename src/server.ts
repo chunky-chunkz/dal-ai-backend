@@ -46,7 +46,15 @@ async function startServer() {
     logger.info(`💬 Chat API: http://${HOST}:${PORT}/api/answer`);
 
   } catch (error) {
-    logger.error('Error starting server:', error);
+    logger.error('Error starting server:');
+    console.error(error); // Also log to console for visibility
+    if (error instanceof Error) {
+      logger.error({
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+    }
     process.exit(1);
   }
 

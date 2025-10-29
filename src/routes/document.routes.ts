@@ -11,11 +11,14 @@ import {
   listDocuments, 
   deleteDocument 
 } from '../services/document.service.js';
-import { optionalAuth } from '../middleware/authGuard.js';
+import { optionalAuth, requireAuth } from '../middleware/authGuard.js';
+import { getSession, getSessionData } from '../auth/session.js';
+import { isAdminEmail } from '../auth/admin.js';
 
 // Request interfaces
 interface AuthenticatedRequest extends FastifyRequest {
   userId?: string;
+  sid?: string;
 }
 
 interface SearchQuery {
@@ -35,38 +38,63 @@ export async function documentRoutes(fastify: FastifyInstance) {
   /**
    * POST /documents/upload
    * Upload and process a text document (as JSON)
+   * Requires authentication
    */
   fastify.post<{
     Body: { content: string; filename: string; userId?: string }
   }>('/documents/upload', {
-    preHandler: optionalAuth
+    preHandler: requireAuth  // Changed from optionalAuth to requireAuth
   }, async (request, reply: FastifyReply) => {
     try {
+      console.log('📥 [documents/upload] request received');
       const body = request.body as { content: string; filename: string; userId?: string };
       const { content, filename } = body;
+      console.log('   🧾 body:', {
+        filename,
+        contentLen: content?.length,
+        hasUserId: !!body.userId
+      });
       
-      // Get userId from authenticated request or from body (for testing)
-      const userId = (request as AuthenticatedRequest).userId || body.userId;
+      // Get userId and user info from authenticated request
+      const userId = (request as AuthenticatedRequest).userId!;
+      const sid = (request as AuthenticatedRequest).sid;
+      console.log('   👤 auth:', { userId, sid });
+      
+      // Get readable username from session
+      let uploadedBy = userId; // Fallback to userId
+      if (sid) {
+        const sessionData = getSessionData(sid);
+        if (sessionData?.user) {
+          // Use name or email as display name
+          uploadedBy = sessionData.user.name || sessionData.user.email || userId;
+          console.log(`📝 User info: name=${sessionData.user.name}, email=${sessionData.user.email}`);
+        }
+      }
       
       // Check file extension
       const isValidFile = filename.endsWith('.txt') || 
                          filename.toLowerCase().endsWith('.pdf') ||
                          filename.toLowerCase().endsWith('.docx');
       if (!isValidFile) {
+        console.warn('   ❌ invalid file extension:', filename);
         return reply.status(400).send({
           success: false,
           error: 'Only .txt, .pdf and .docx files are currently supported'
         });
       }
       
-      console.log(`📤 Document upload: ${filename} (${content.length} bytes), userId: ${userId || 'none'}`);
+      console.log(`📤 Document upload: ${filename} (${content.length} bytes), uploadedBy: ${uploadedBy}`);
       
-      // Process document
+      const t0 = Date.now();
+      // Process document with uploadedBy (readable name)
       const result = await processDocument(
         content, 
         filename, 
-        userId
+        userId,
+        uploadedBy  // Pass the readable name
       );
+      const dt = Date.now() - t0;
+      console.log(`✅ processDocument finished in ${dt}ms -> chunks=${result.chunksCreated} facts=${result.memoriesExtracted}`);
       
       return reply.send(result);
       
@@ -172,22 +200,37 @@ export async function documentRoutes(fastify: FastifyInstance) {
   
   /**
    * DELETE /documents/:documentId
-   * Delete a document
+   * Delete a document (only owner or admin)
+   * Requires authentication
    */
   fastify.delete<{
     Params: DeleteParams
   }>('/documents/:documentId', {
-    preHandler: optionalAuth
+    preHandler: requireAuth  // Changed from optionalAuth to requireAuth
   }, async (request, reply: FastifyReply) => {
     try {
       const { documentId } = request.params;
+      const userId = (request as AuthenticatedRequest).userId!;
+      const sid = (request as AuthenticatedRequest).sid;
       
-      const success = await deleteDocument(documentId);
+      // Check if user is admin
+      let isAdmin = false;
+      if (sid) {
+        const sessionData = getSessionData(sid);
+        if (sessionData?.user?.email) {
+          isAdmin = isAdminEmail(sessionData.user.email);
+        }
+      }
       
-      if (!success) {
-        return reply.status(404).send({
+      console.log(`🗑️ Delete request for document ${documentId} by user ${userId} (admin: ${isAdmin})`);
+      
+      const result = await deleteDocument(documentId, userId, isAdmin);
+      
+      if (!result.success) {
+        const statusCode = result.error?.includes('Unauthorized') ? 403 : 404;
+        return reply.status(statusCode).send({
           success: false,
-          error: 'Document not found'
+          error: result.error || 'Document not found'
         });
       }
       

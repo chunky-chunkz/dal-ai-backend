@@ -8,6 +8,10 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { listByUser, remove, clearUser } from '../memory/store.js';
 import { evaluateAndMaybeStore, saveSuggestion } from '../memory/manager.js';
+import { retrieveForPrompt, getAllGrouped } from '../memory/retriever.js';
+import { recordConsent, getConsentHistory, getConsentStats, createConsentPrompt } from '../memory/consent.js';
+import { summarizeUserMemories, previewSummarization } from '../memory/summarizer.js';
+import { getUserStats, getSystemStats, getQualityMetrics, logMemoryEvent, exportMetricsCSV } from '../memory/metrics.js';
 import type { MemoryItem } from '../memory/store.js';
 
 // Request interfaces for type safety
@@ -387,63 +391,6 @@ export async function memoryRoutes(fastify: FastifyInstance) {
   });
 
   /**
-   * GET /memory/stats
-   * Get memory statistics for the user
-   */
-  fastify.get('/memory/stats', async (request: AuthenticatedRequest, reply: FastifyReply) => {
-    try {
-      const userId = getUserId(request);
-      
-      console.log(`📊 Getting memory stats for user: ${userId}`);
-      
-      const memories = await listByUser(userId);
-      
-      // Calculate statistics
-      const stats = {
-        total: memories.length,
-        byType: {} as Record<string, number>,
-        byPerson: {} as Record<string, number>,
-        byConfidence: {
-          high: 0,    // >= 0.8
-          medium: 0,  // 0.5 - 0.8
-          low: 0      // < 0.5
-        },
-        latest: memories[0]?.createdAt || null,
-        oldest: memories[memories.length - 1]?.createdAt || null
-      };
-      
-      for (const memory of memories) {
-        // By type
-        stats.byType[memory.type] = (stats.byType[memory.type] || 0) + 1;
-        
-        // By person
-        const person = memory.person || 'self';
-        stats.byPerson[person] = (stats.byPerson[person] || 0) + 1;
-        
-        // By confidence
-        if (memory.confidence >= 0.8) {
-          stats.byConfidence.high++;
-        } else if (memory.confidence >= 0.5) {
-          stats.byConfidence.medium++;
-        } else {
-          stats.byConfidence.low++;
-        }
-      }
-      
-      return reply.send({
-        success: true,
-        data: stats
-      });
-    } catch (error) {
-      console.error('❌ Error getting memory stats:', error);
-      return reply.status(500).send({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
-  });
-
-  /**
    * POST /memory/search
    * Search memories by text content
    */
@@ -640,6 +587,249 @@ export async function memoryRoutes(fastify: FastifyInstance) {
       });
     } catch (error) {
       console.error('❌ Error retrieving user memories:', error);
+      return reply.status(500).send({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  /**
+   * GET /memory/retrieve
+   * Retrieve relevant memories for a query (using new retriever)
+   */
+  fastify.get<{
+    Querystring: { query: string; limit?: number }
+  }>('/memory/retrieve', async (request: AuthenticatedRequest, reply: FastifyReply) => {
+    try {
+      const userId = getUserId(request);
+      const queryParams = request.query as { query: string; limit?: number };
+      const { query, limit = 5 } = queryParams;
+      
+      if (!query) {
+        return reply.status(400).send({
+          success: false,
+          error: 'Query parameter is required'
+        });
+      }
+      
+      console.log(`🔍 Retrieving memories for query: "${query}"`);
+      
+      const result = await retrieveForPrompt(userId, query, Number(limit));
+      
+      await logMemoryEvent(userId, 'retrieve', undefined, undefined, { query, resultCount: result.relevant.length });
+      
+      return reply.send({
+        success: true,
+        data: {
+          context: result.context,
+          relevant: result.relevant,
+          count: result.relevant.length
+        }
+      });
+    } catch (error) {
+      console.error('❌ Error retrieving memories:', error);
+      return reply.status(500).send({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  /**
+   * GET /memory/grouped
+   * Get all memories grouped by type
+   */
+  fastify.get('/memory/grouped', async (request: AuthenticatedRequest, reply: FastifyReply) => {
+    try {
+      const userId = getUserId(request);
+      
+      const grouped = await getAllGrouped(userId);
+      const groupedObject: Record<string, MemoryItem[]> = {};
+      
+      for (const [type, memories] of grouped) {
+        groupedObject[type] = memories;
+      }
+      
+      return reply.send({
+        success: true,
+        data: groupedObject
+      });
+    } catch (error) {
+      console.error('❌ Error getting grouped memories:', error);
+      return reply.status(500).send({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  /**
+   * POST /memory/consent
+   * Record user consent decision
+   */
+  fastify.post<{
+    Body: { key: string; type: string; approved: boolean }
+  }>('/memory/consent', async (request: AuthenticatedRequest, reply: FastifyReply) => {
+    try {
+      const userId = getUserId(request);
+      const body = request.body as { key: string; type: string; approved: boolean };
+      const { key, type, approved } = body;
+      
+      const success = await recordConsent(userId, key, type, approved);
+      
+      return reply.send({
+        success,
+        message: approved ? 'Consent recorded - memory will be saved' : 'Declined - key blacklisted for 24h'
+      });
+    } catch (error) {
+      console.error('❌ Error recording consent:', error);
+      return reply.status(500).send({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  /**
+   * GET /memory/consent-history
+   * Get user's consent history
+   */
+  fastify.get('/memory/consent-history', async (request: AuthenticatedRequest, reply: FastifyReply) => {
+    try {
+      const userId = getUserId(request);
+      
+      const history = await getConsentHistory(userId);
+      const stats = await getConsentStats(userId);
+      
+      return reply.send({
+        success: true,
+        data: {
+          history,
+          stats
+        }
+      });
+    } catch (error) {
+      console.error('❌ Error getting consent history:', error);
+      return reply.status(500).send({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  /**
+   * POST /memory/summarize
+   * Trigger memory summarization for user
+   */
+  fastify.post<{
+    Body: { minAgeDays?: number; preview?: boolean }
+  }>('/memory/summarize', async (request: AuthenticatedRequest, reply: FastifyReply) => {
+    try {
+      const userId = getUserId(request);
+      const body = (request.body || {}) as { minAgeDays?: number; preview?: boolean };
+      const { minAgeDays = 30, preview = false } = body;
+      
+      if (preview) {
+        const clusters = await previewSummarization(userId, minAgeDays);
+        return reply.send({
+          success: true,
+          preview: true,
+          data: {
+            clusters: clusters.map(cluster => ({
+              count: cluster.length,
+              type: cluster[0]?.type,
+              keys: cluster.map(m => m.key)
+            }))
+          }
+        });
+      }
+      
+      const stats = await summarizeUserMemories(userId, minAgeDays);
+      
+      await logMemoryEvent(userId, 'summarize', undefined, undefined, stats);
+      
+      return reply.send({
+        success: true,
+        data: stats
+      });
+    } catch (error) {
+      console.error('❌ Error summarizing memories:', error);
+      return reply.status(500).send({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  /**
+   * GET /memory/stats
+   * Get user's memory statistics
+   */
+  fastify.get('/memory/stats', async (request: AuthenticatedRequest, reply: FastifyReply) => {
+    try {
+      const userId = getUserId(request);
+      
+      const userStats = await getUserStats(userId);
+      const qualityMetrics = await getQualityMetrics(userId);
+      
+      return reply.send({
+        success: true,
+        data: {
+          user: userStats,
+          quality: qualityMetrics
+        }
+      });
+    } catch (error) {
+      console.error('❌ Error getting memory stats:', error);
+      return reply.status(500).send({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  /**
+   * GET /memory/stats/system
+   * Get system-wide memory statistics (admin only)
+   */
+  fastify.get('/memory/stats/system', async (request: AuthenticatedRequest, reply: FastifyReply) => {
+    try {
+      const systemStats = await getSystemStats();
+      const qualityMetrics = await getQualityMetrics();
+      
+      return reply.send({
+        success: true,
+        data: {
+          system: systemStats,
+          quality: qualityMetrics
+        }
+      });
+    } catch (error) {
+      console.error('❌ Error getting system stats:', error);
+      return reply.status(500).send({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  /**
+   * GET /memory/export/csv
+   * Export memory metrics as CSV
+   */
+  fastify.get('/memory/export/csv', async (request: AuthenticatedRequest, reply: FastifyReply) => {
+    try {
+      const userId = getUserId(request);
+      
+      const csv = await exportMetricsCSV(userId);
+      
+      return reply
+        .header('Content-Type', 'text/csv')
+        .header('Content-Disposition', `attachment; filename="memory-metrics-${userId}-${Date.now()}.csv"`)
+        .send(csv);
+    } catch (error) {
+      console.error('❌ Error exporting metrics:', error);
       return reply.status(500).send({
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'

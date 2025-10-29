@@ -21,9 +21,9 @@ import * as answerCache from '../utils/answerCache.js';
 import { applyGuardrails, getSensitiveTopicResponse } from '../ai/guardrails.js';
 import { setProfile, findFact } from '../memory/profileStore.js';
 import { localLLM } from '../ai/localLLM.js';
-import { getContext, putTurn } from '../memory/sessionMemory.js';
 import { evaluateAndMaybeStore, type EvaluationResult } from '../memory/manager.js';
-import { listByUser } from '../memory/store.js';
+import { listByUser, type MemoryItem } from '../memory/store.js';
+import { retrieveForPrompt } from '../memory/retriever.js';
 
 /**
  * Standard response interface for answer queries
@@ -61,18 +61,8 @@ async function generateDirectChatResponse(
       prompt += `${memoryContext}\n`;
     }
     
-    // Add conversation history if sessionId provided
-    if (sessionId) {
-      const conversationHistory = getContext(sessionId, 6); // Default 6 turns
-      if (conversationHistory.length > 0) {
-        prompt += `Verlauf:\n`;
-        for (const turn of conversationHistory) {
-          const roleText = turn.role === "user" ? "Benutzer" : "Assistent";
-          prompt += `${roleText}: ${turn.text}\n`;
-        }
-        prompt += `\n`;
-      }
-    }
+    // Note: Conversation history is now managed by the Enhanced Memory System
+    // and retrieved via retrieveForPrompt() based on semantic relevance
     
     prompt += `Frage: ${question}`;
 
@@ -218,12 +208,27 @@ function formatMemorySuggestions(suggestions: Array<{ key: string; value: string
 
 /**
  * Get stored memories for a user to include in context
+ * Uses semantic search to find the most relevant memories for the current question
  */
-async function getMemoryContext(userId: string): Promise<string> {
+async function getMemoryContext(userId: string, question?: string): Promise<string> {
   try {
     console.log('🧠 Getting memory context for userId:', userId);
     
-    // Get user-specific memories
+    // If we have a question, use semantic search to find relevant memories
+    if (question) {
+      try {
+        const { context } = await retrieveForPrompt(userId, question, 5);
+        if (context.trim()) {
+          console.log('✅ Semantic memory context created');
+          console.log('📝 Context:', context.substring(0, 200));
+          return context + '\n';
+        }
+      } catch (error) {
+        console.warn('⚠️ Semantic search failed, falling back to recent memories:', error);
+      }
+    }
+    
+    // Fallback: Get user-specific memories (if semantic search failed or no question)
     const userMemories = await listByUser(userId);
     console.log('📚 Found user-specific memories:', userMemories.length);
     
@@ -239,10 +244,10 @@ async function getMemoryContext(userId: string): Promise<string> {
       return '';
     }
     
-    // Format memories as context
+    // Format memories as context (most recent first)
     const memoryLines = allMemories
       .filter(m => m.type === 'preference' || m.type === 'profile_fact' || m.type === 'fact')
-      .slice(-10) // Last 10 memories to avoid too much context (5 user + 5 global)
+      .slice(-10) // Last 10 memories to avoid too much context
       .map(m => {
         const source = m.userId === 'global-knowledge' ? '(Allgemeines Wissen)' : '(Persönlich)';
         console.log(`  📝 Memory ${source}:`, m.key, '=', m.value);
@@ -358,10 +363,10 @@ export async function answerQuestion(
     let enhancedMemoryContext = memoryContext || '';
     if (userId && !enhancedMemoryContext) {
       console.log('🔍 Loading memory context for userId:', userId);
-      enhancedMemoryContext = await getMemoryContext(userId);
+      enhancedMemoryContext = await getMemoryContext(userId, normalizedQuestion);
       console.log('📝 Memory context loaded:', enhancedMemoryContext ? 'YES' : 'NO');
       if (enhancedMemoryContext) {
-        console.log('📄 Memory context content:', enhancedMemoryContext);
+        console.log('📄 Memory context content:', enhancedMemoryContext.substring(0, 200));
       }
     }
 
@@ -402,20 +407,8 @@ export async function answerQuestion(
     // Use direct LLM response instead of RAG for normal chat (with enhanced memory context and settings)
     const result = await generateDirectChatResponse(processedQuestion, sessionId, enhancedMemoryContext, settings);
 
-    // Save user question and assistant answer to session memory
-    if (sessionId) {
-      putTurn(sessionId, {
-        role: 'user',
-        text: normalizedQuestion,
-        ts: Date.now()
-      });
-      
-      putTurn(sessionId, {
-        role: 'assistant',
-        text: result.answer,
-        ts: Date.now()
-      });
-    }
+    // Conversation history is now managed by Enhanced Memory System
+    // Memories are automatically extracted and stored via evaluateAndMaybeStore()
 
     // Add memory suggestions to the response if any
     if (memoryEvaluation?.suggestions && memoryEvaluation.suggestions.length > 0) {

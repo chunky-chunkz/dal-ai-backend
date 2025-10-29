@@ -1,7 +1,8 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { RegisterSchema, LoginSchema } from './validators.js';
 import { hashPassword, verifyPassword } from './password.js';
-import { createSession, destroySession, getSession } from './session.js';
+import { verifyAdminCredentials, isAdminEmail } from './admin.js';
+import { createSession, destroySession, getSession, setSessionData } from './session.js';
 import * as userRepo from '../users/user.repo.js';
 import { requireAuth } from '../middleware/authGuard.js';
 import { authRateLimit } from '../middleware/rateLimit.js';
@@ -55,7 +56,17 @@ async function registerHandler(
     });
 
     // Create session
-    createSession(reply, user.id);
+    const sessionId = createSession(reply, user.id);
+    
+    // Add user data to session
+    setSessionData(sessionId, {
+      userId: user.id,
+      user: {
+        id: user.id,
+        name: user.displayName || user.email,
+        email: user.email
+      }
+    });
 
     // Record successful registration
     await recordRegister(
@@ -116,7 +127,45 @@ async function loginHandler(
 
     const { email, password } = validation.data;
 
-    // Find user
+    // Check if it's the admin user first
+    const adminUser = await verifyAdminCredentials(email, password);
+    if (adminUser) {
+      // Create session for admin
+      const sessionId = createSession(reply, adminUser.id);
+      
+      // Add admin data to session
+      setSessionData(sessionId, {
+        userId: adminUser.id,
+        user: {
+          id: adminUser.id,
+          name: adminUser.displayName,
+          email: adminUser.email
+        }
+      });
+
+      // Record successful admin login
+      await recordLogin(
+        adminUser.id,
+        email,
+        request.ip || 'unknown',
+        request.headers['user-agent']
+      );
+
+      console.log('🔐 Admin login successful:', adminUser.email);
+
+      // Return admin user data
+      return reply.status(200).send({
+        ok: true,
+        user: {
+          id: adminUser.id,
+          email: adminUser.email,
+          displayName: adminUser.displayName,
+          isAdmin: true
+        }
+      });
+    }
+
+    // Find user in regular user repository
     const user = await userRepo.findByEmail(email);
     if (!user || !user.passwordHash) {
       // Record failed login attempt
@@ -151,7 +200,17 @@ async function loginHandler(
     }
 
     // Create session
-    createSession(reply, user.id);
+    const sessionId = createSession(reply, user.id);
+    
+    // Add user data to session
+    setSessionData(sessionId, {
+      userId: user.id,
+      user: {
+        id: user.id,
+        name: user.displayName || user.email,
+        email: user.email
+      }
+    });
 
     // Record successful login
     await recordLogin(

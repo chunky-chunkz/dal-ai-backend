@@ -397,7 +397,7 @@ function calculateAnswerConfidence(answer: string, _prompt: string): number {
   }
 
   // Negative indicators
-  if (answer.includes('Ich weiß nicht') || answer.includes('kann ich nicht')) {
+  if (answer.includes('Ich weiss nicht') || answer.includes('kann ich nicht')) {
     confidence -= 0.2;
   }
   

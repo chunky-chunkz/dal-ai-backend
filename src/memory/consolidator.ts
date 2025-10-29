@@ -251,7 +251,7 @@ export class MemoryConsolidator {
     
     // Check semantic equivalence groups
     const semanticGroups = [
-      ['name', 'vorname', 'heißt', 'genannt'],
+      ['name', 'vorname', 'heisst', 'genannt'],
       ['wohnort', 'stadt', 'lebt_in', 'zuhause'],
       ['beruf', 'job', 'arbeitet_als', 'ist'],
       ['mag', 'gefällt', 'liebt', 'bevorzugt'],
@@ -314,7 +314,7 @@ export class MemoryConsolidator {
   private static areValuesContradictory(val1: string, val2: string): boolean {
     
     // Color contradictions
-    const colors = ['rot', 'blau', 'grün', 'gelb', 'schwarz', 'weiß', 'grau', 'braun'];
+    const colors = ['rot', 'blau', 'grün', 'gelb', 'schwarz', 'weiss', 'grau', 'braun'];
     const val1Color = colors.find(c => val1.includes(c));
     const val2Color = colors.find(c => val2.includes(c));
     

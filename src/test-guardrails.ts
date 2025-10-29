@@ -141,7 +141,7 @@ async function testKeywordExtraction() {
         description: 'Multiple keywords'
       },
       {
-        input: 'Können Sie meine Personendaten löschen gemäß DSGVO?',
+        input: 'Können Sie meine Personendaten löschen gemäss DSGVO?',
         expectedKeywords: ['personendaten', 'dsgvo'],
         description: 'Privacy keywords'
       },

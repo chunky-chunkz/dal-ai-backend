@@ -19,7 +19,7 @@ async function testSensitiveEscalation() {
     
     const sensitiveQuestions = [
       'Ich möchte meinen Vertrag kündigen wegen rechtlicher Probleme.',
-      'Können Sie meine Personendaten löschen gemäß DSGVO?',
+      'Können Sie meine Personendaten löschen gemäss DSGVO?',
       'Ich brauche einen Anwalt für diese Sache.',
       'Ich möchte eine Beschwerde gegen Ihr Unternehmen einreichen.'
     ];

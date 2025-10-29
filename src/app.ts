@@ -57,7 +57,7 @@ export async function buildApp(): Promise<FastifyInstance> {
     origin: process.env.FRONTEND_ORIGIN || process.env.CORS_ORIGIN || "http://localhost:3000",
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Accept']
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Accept', 'x-session-id']
   });
 
   // Register cookie plugin for session management

@@ -23,6 +23,7 @@ export interface MemoryItem {
   ttl?: string; // ISO 8601 duration or null for permanent
   createdAt: Date;
   updatedAt: Date;
+  metadata?: Record<string, any>; // Optional metadata for extensibility
 }
 
 export type MemoryItemInput = Omit<MemoryItem, "id" | "createdAt" | "updatedAt">;
