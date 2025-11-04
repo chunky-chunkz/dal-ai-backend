@@ -15,6 +15,7 @@ import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const pdfParse = require('pdf-parse');
 const mammoth = require('mammoth');
+const PDFExtract = require('pdf.js-extract').PDFExtract;
 
 // Document storage paths
 const DOCS_DIR = path.join(process.cwd(), 'data', 'documents');
@@ -105,8 +106,11 @@ async function saveDocumentIndex(index: DocumentIndex): Promise<void> {
     // quick size estimate before stringify
     const approx = index.documents.reduce((sum, d) => sum + d.chunks.length, 0);
     console.log(`   ⏺ chunks total=${approx}`);
-    // Create a shallow, JSON-safe clone to avoid circular refs or getters
-    const safeIndex: DocumentIndex = {
+    
+    // ALWAYS save without embeddings to prevent stack overflow
+    // Embeddings are too large and cause JSON.stringify to fail
+    console.log('   💾 Saving without embeddings (prevents stack overflow)');
+    const indexWithoutEmbeddings: DocumentIndex = {
       documents: index.documents.map(doc => ({
         id: doc.id,
         name: doc.name,
@@ -119,75 +123,19 @@ async function saveDocumentIndex(index: DocumentIndex): Promise<void> {
           documentName: chunk.documentName,
           content: chunk.content,
           chunkIndex: chunk.chunkIndex,
-          embedding: chunk.embedding,
+          // Never save embeddings - regenerate when needed
           metadata: chunk.metadata
         }))
       }))
     };
-    // Use a safer approach to prevent stack overflow with large indexes
-    const jsonString = JSON.stringify(safeIndex);
+    
+    const jsonString = JSON.stringify(indexWithoutEmbeddings);
     console.log(`   📦 json length=${jsonString.length.toLocaleString()} bytes`);
     await fs.writeFile(DOCS_INDEX_PATH, jsonString, 'utf-8');
-    console.log('📄 Document index saved');
+    console.log('✅ Document index saved');
   } catch (error) {
     console.error('❌ Failed to save document index:', error);
-    // Try to save without embeddings as fallback
-    try {
-      console.log('   🔁 Fallback: remove embeddings from chunks');
-      const indexWithoutEmbeddings: DocumentIndex = {
-        documents: index.documents.map(doc => ({
-          id: doc.id,
-          name: doc.name,
-          uploadedAt: doc.uploadedAt,
-          uploadedBy: doc.uploadedBy,
-          uploadedByUserId: doc.uploadedByUserId,
-          chunks: doc.chunks.map(chunk => ({
-            id: chunk.id,
-            documentId: chunk.documentId,
-            documentName: chunk.documentName,
-            content: chunk.content,
-            chunkIndex: chunk.chunkIndex,
-            // Remove embedding to reduce size
-            metadata: chunk.metadata
-          }))
-        }))
-      };
-      const jsonString = JSON.stringify(indexWithoutEmbeddings);
-      console.log(`   📦 fallback json length=${jsonString.length.toLocaleString()} bytes`);
-      await fs.writeFile(DOCS_INDEX_PATH, jsonString, 'utf-8');
-      console.log('⚠️  Document index saved without embeddings (fallback)');
-    } catch (fallbackError) {
-      console.error('❌ Failed to save document index even without embeddings:', fallbackError);
-      // Final fallback: strip large fields (content) and embeddings
-      try {
-        console.log('   🔁 Final fallback: strip content and embeddings');
-        const ultraLightIndex: DocumentIndex = {
-          documents: index.documents.map(doc => ({
-            id: doc.id,
-            name: doc.name,
-            uploadedAt: doc.uploadedAt,
-            uploadedBy: doc.uploadedBy,
-            uploadedByUserId: doc.uploadedByUserId,
-            chunks: doc.chunks.map(chunk => ({
-              id: chunk.id,
-              documentId: chunk.documentId,
-              documentName: chunk.documentName,
-              content: '', // Empty content
-              chunkIndex: chunk.chunkIndex,
-              // Drop embedding
-              metadata: chunk.metadata || { originalLength: chunk.content?.length}
-            }))
-          }))
-        };
-        const jsonString = JSON.stringify(ultraLightIndex);
-        console.log(`   📦 ultra-light json length=${jsonString.length.toLocaleString()} bytes`);
-        await fs.writeFile(DOCS_INDEX_PATH, jsonString, 'utf-8');
-        console.log('⚠️  Document index saved in ultra-light mode (no content/embeddings)');
-      } catch (finalError) {
-        console.error('❌ Failed to save document index in ultra-light mode:', finalError);
-        throw finalError;
-      }
-    }
+    throw error;
   }
 }
 
@@ -201,6 +149,36 @@ async function extractPdfText(buffer: Buffer): Promise<string> {
   } catch (error) {
     console.error('❌ Error parsing PDF:', error);
     throw new Error('Failed to parse PDF file');
+  }
+}
+
+/**
+ * Extract text from PDF using pdf.js-extract (better for image-based PDFs)
+ */
+async function extractPdfTextAdvanced(filePath: string): Promise<string> {
+  try {
+    console.log('🔍 Using advanced PDF extraction (pdf.js-extract)...');
+    
+    const pdfExtract = new PDFExtract();
+    const data = await pdfExtract.extract(filePath, {});
+    
+    // Extract all text from all pages
+    let fullText = '';
+    for (const page of data.pages) {
+      for (const item of page.content) {
+        if (item.str) {
+          fullText += item.str + ' ';
+        }
+      }
+      fullText += '\n\n'; // Separate pages
+    }
+    
+    console.log(`✅ Advanced extraction complete: ${fullText.length} chars from ${data.pages.length} pages`);
+    return fullText;
+    
+  } catch (error) {
+    console.error('❌ Error during advanced PDF extraction:', error);
+    throw new Error('Failed to extract text with pdf.js-extract');
   }
 }
 
@@ -224,47 +202,82 @@ async function extractDocxText(buffer: Buffer): Promise<string> {
 /**
  * Extract facts from document chunks (optimized for documents, not user utterances)
  * Unlike extractCandidates(), this doesn't filter out question-like sentences
+ * UPDATED: More aggressive extraction for documents + FALLBACK without LLM
  */
 async function extractDocumentFacts(text: string, userId: string): Promise<Candidate[]> {
   try {
   console.log(`🔎 extractDocumentFacts: textLen=${text?.length ?? 0} userId=${userId}`);
+    
+    // Try LLM extraction first
+    try {
+      return await extractWithLLM(text, userId);
+    } catch (llmError) {
+      console.warn('⚠️ LLM extraction failed, using regex fallback:', llmError instanceof Error ? llmError.message : 'Unknown');
+      // Fall back to regex-based extraction
+      return extractWithRegexPatterns(text);
+    }
+  } catch (error) {
+    console.warn('   ⚠️ Document fact extraction failed:', error instanceof Error ? error.message : 'Unknown');
+    if (error instanceof Error && error.stack) {
+      console.warn(error.stack);
+    }
+    return [];
+  }
+}
+
+/**
+ * Extract facts using LLM (primary method)
+ */
+async function extractWithLLM(text: string, userId: string): Promise<Candidate[]> {
     // For documents, we want to extract factual information
     // Use a specialized prompt for document extraction
-    const systemPrompt = `Extrahiere ALLE wichtigen Fakten, Definitionen, technischen Details, Prozesse und Informationen aus diesem Text.
+    const systemPrompt = `Extrahiere ALLE wichtigen Fakten, Definitionen, technischen Details, Prozesse, Server-Infos, Konfigurationen und Informationen aus diesem Text.
 Antworte als JSON-Array von Objekten mit: type, key, value, confidence (0-1).
 
 Types: "fact" (allgemeine Fakten), "preference" (Vorlieben/Einstellungen), "contact" (Kontaktinformationen).
 
-WICHTIG: Extrahiere so viele relevante Fakten wie möglich. Jeder Fakt sollte separat gespeichert werden.
+KRITISCH: Extrahiere SEHR VIELE Fakten - jeder technische Detail, jede Server-Info, jede Konfiguration ist wichtig!
+- Server-Namen, IP-Adressen, Domains → IMMER extrahieren
+- Ports, Protokolle, Services → IMMER extrahieren  
+- Pfade, Config-Files, Log-Locations → IMMER extrahieren
+- Software-Versionen, Tools, Komponenten → IMMER extrahieren
+- Technische Begriffe, Definitionen → IMMER extrahieren
 
 Beispiele:
-"Syslog ist ein Protokoll zur Übertragung von Log-Nachrichten." ->
-[{"type":"fact","key":"syslog_definition","value":"protokoll zur übertragung von log-nachrichten","confidence":0.9}]
+"Syslog ist ein Protokoll zur Übertragung von Log-Nachrichten über Port 514." ->
+[{"type":"fact","key":"syslog_definition","value":"protokoll zur übertragung von log-nachrichten","confidence":0.9},
+ {"type":"fact","key":"syslog_port","value":"514","confidence":0.95}]
 
-"Graylog ist eine Log-Management-Plattform." ->
-[{"type":"fact","key":"graylog_typ","value":"log-management-plattform","confidence":0.9}]
+"Graylog-Server läuft auf 192.168.2.55, Domäne: lab.local" ->
+[{"type":"fact","key":"graylog_ip","value":"192.168.2.55","confidence":0.95},
+ {"type":"fact","key":"graylog_domain","value":"lab.local","confidence":0.95}]
 
-"Der Standard-Port ist 514." ->
-[{"type":"fact","key":"standard_port","value":"514","confidence":0.85}]
+"Der Standard-Port ist 514 UDP, Config liegt unter /etc/syslog-ng/syslog-ng.conf" ->
+[{"type":"fact","key":"standard_port","value":"514 udp","confidence":0.9},
+ {"type":"fact","key":"config_path","value":"/etc/syslog-ng/syslog-ng.conf","confidence":0.95}]
+
+"OS: Ubuntu 24.04.1 LTS, SSH: ssh [username@IP-Adresse / syslog.lab.local]" ->
+[{"type":"fact","key":"os_version","value":"ubuntu 24.04.1 lts","confidence":0.95},
+ {"type":"fact","key":"ssh_host","value":"syslog.lab.local","confidence":0.9}]
 
 Wenn keine relevanten Fakten: []`;
 
-  const promptSlice = text.substring(0, 2000);
+  const promptSlice = text.substring(0, 3000); // ERHÖHT von 2000 auf 3000
   console.log(`   ✉️ prompt slice len=${promptSlice.length}`);
-  const userPrompt = `Text: "${promptSlice}"`; // Erhöht von 1000 auf 2000 für mehr Kontext
+  const userPrompt = `Text: "${promptSlice}"`;
     
   const response = await localLLM.generate({
       model: process.env.LLM_MODEL || 'phi3:mini',
       system: systemPrompt,
       prompt: userPrompt,
-      temperature: 0.1,
-      maxTokens: 1500  // Erhöht von 500 auf 1500 für mehr Fakten
+      temperature: 0.05, // GESENKT von 0.1 auf 0.05 für konsistentere Extraktion
+      maxTokens: 2000  // ERHÖHT von 1500 auf 2000 für mehr Fakten
     });
   console.log(`   📥 LLM response length=${response?.length ?? 0}`);
     
     if (!response?.trim()) {
       console.log('   ⚠️ LLM returned empty response');
-      return [];
+      throw new Error('Empty LLM response');
     }
     
     // Extract JSON from response - safer approach
@@ -275,7 +288,7 @@ Wenn keine relevanten Fakten: []`;
     
     if (firstBracket === -1 || lastBracket === -1 || firstBracket >= lastBracket) {
       console.log('   ⚠️ No JSON array found in LLM response');
-      return [];
+      throw new Error('No JSON in LLM response');
     }
     
   const jsonStr = response.substring(firstBracket, lastBracket + 1);
@@ -284,7 +297,7 @@ Wenn keine relevanten Fakten: []`;
     // Limit JSON string length to prevent stack overflow during parsing
     if (jsonStr.length > 50000) {
       console.log('   ⚠️ JSON response too large, truncating...');
-      return [];
+      throw new Error('JSON too large');
     }
     
     let parsed;
@@ -293,12 +306,12 @@ Wenn keine relevanten Fakten: []`;
     } catch (parseError) {
       console.warn('   ⚠️ Failed to parse JSON:', parseError instanceof Error ? parseError.message : 'Unknown');
       console.warn('   🧩 json preview:', jsonStr.slice(0, 200));
-      return [];
+      throw parseError;
     }
     
     if (Array.isArray(parsed)) {
-      // Limit number of facts to prevent overwhelming the system
-  const limitedParsed = parsed.slice(0, 50); // Max 50 facts per chunk
+      // ERHÖHT von 50 auf 100 facts pro chunk
+  const limitedParsed = parsed.slice(0, 100);
   console.log(`   ✅ parsed facts: total=${parsed.length} limited=${limitedParsed.length}`);
       
       return limitedParsed.map(item => ({
@@ -306,18 +319,62 @@ Wenn keine relevanten Fakten: []`;
         type: item.type || 'fact',
         key: item.key,
         value: item.value,
-        confidence: item.confidence || 0.7
+        confidence: item.confidence || 0.75 // ERHÖHT von 0.7 auf 0.75 als Default
       }));
     }
     
-    return [];
-  } catch (error) {
-    console.warn('   ⚠️ Document fact extraction failed:', error instanceof Error ? error.message : 'Unknown');
-    if (error instanceof Error && error.stack) {
-      console.warn(error.stack);
+    throw new Error('Parsed result is not an array');
+}
+
+/**
+ * Extract facts using regex patterns (fallback when LLM fails)
+ */
+function extractWithRegexPatterns(text: string): Candidate[] {
+  console.log('   🔄 Using regex fallback for fact extraction');
+  const candidates: Candidate[] = [];
+  
+  // Technical patterns for server/network info
+  const patterns = [
+    // IP addresses
+    { pattern: /(?:IP|ip|Server|server)[-:\s]+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/gi, type: 'fact', keyPrefix: 'ip', confidence: 0.9 },
+    // Domains and hostnames (like idm.lab.local, cert.pem)
+    { pattern: /([a-z0-9]+\.(?:lab\.)?local)/gi, type: 'fact', keyPrefix: 'hostname', confidence: 0.85 },
+    { pattern: /(?:Domain|domain|Domäne)[-:\s]+([a-z0-9.-]+\.[a-z]{2,})/gi, type: 'fact', keyPrefix: 'domain', confidence: 0.85 },
+    // File names (cert.pem, cert.crt, config files)
+    { pattern: /([a-z0-9_-]+\.(?:pem|crt|cer|key|p12|pfx|csr))/gi, type: 'fact', keyPrefix: 'certificate_file', confidence: 0.8 },
+    // Ports
+    { pattern: /(?:Port|port)[-:\s]+(\d{2,5}(?:\s+(?:UDP|TCP|udp|tcp))?)/gi, type: 'fact', keyPrefix: 'port', confidence: 0.9 },
+    // Config paths
+    { pattern: /(\/[a-z0-9/_.-]+\.(?:conf|config|cfg|ini|json|yaml|yml))/gi, type: 'fact', keyPrefix: 'config_file', confidence: 0.85 },
+    // Log paths
+    { pattern: /(\/var\/log\/[a-z0-9/_.-]+\.log)/gi, type: 'fact', keyPrefix: 'log_file', confidence: 0.85 },
+    // OS versions
+    { pattern: /(?:OS|os|Ubuntu|Debian|CentOS|RHEL)[-:\s]+([a-z0-9. ]+(?:LTS)?)/gi, type: 'fact', keyPrefix: 'os', confidence: 0.8 },
+    // Services
+    { pattern: /(?:Service|service|syslog-ng|graylog|ansible|monitoring)[-:\s]+([a-z0-9._-]+)/gi, type: 'fact', keyPrefix: 'service', confidence: 0.75 },
+    // Certificate Authority mentions
+    { pattern: /(Certificate Authority|Zertifikat(?:s)?|certificate)/gi, type: 'fact', keyPrefix: 'process', confidence: 0.6 },
+  ];
+  
+  let matchCount = 0;
+  for (const { pattern, type, keyPrefix, confidence } of patterns) {
+    const matches = [...text.matchAll(pattern)];
+    for (const match of matches) {
+      if (match[1] || match[0]) {
+        matchCount++;
+        candidates.push({
+          person: 'system',
+          type: type as any,
+          key: `${keyPrefix}_${matchCount}`,
+          value: (match[1] || match[0]).trim(),
+          confidence
+        });
+      }
     }
-    return [];
   }
+  
+  console.log(`   ✅ Regex extracted ${candidates.length} facts`);
+  return candidates;
 }
 
 /**
@@ -425,6 +482,12 @@ export async function processDocument(
     console.log(`   Uploaded by: ${uploadedBy || userId || 'unknown'}`);
   console.log(`   Content length (raw): ${content.length}`);
     
+    // Save file to disk first (needed for OCR)
+    const fileExt = path.extname(filename).toLowerCase() || '.pdf';
+    const filePath = path.join(DOCS_DIR, `${documentId}${fileExt}`);
+    await fs.writeFile(filePath, Buffer.from(content, 'base64'));
+    console.log(`   💾 Saved to: ${filePath}`);
+    
     // Extract text based on file type
     let textContent: string;
     if (filename.toLowerCase().endsWith('.pdf')) {
@@ -432,6 +495,20 @@ export async function processDocument(
       const buffer = Buffer.from(content, 'base64');
       textContent = await extractPdfText(buffer);
       console.log(`   ✅ Extracted ${textContent.length} characters from PDF`);
+      
+      // If text is too short (< 100 chars), try advanced extraction as fallback
+      if (textContent.trim().length < 100) {
+        console.log(`   ⚠️ PDF text too short (${textContent.trim().length} chars) - trying advanced extraction...`);
+        try {
+          const advancedText = await extractPdfTextAdvanced(filePath);
+          if (advancedText.length > textContent.length) {
+            console.log(`   ✅ Advanced extraction found more text: ${advancedText.length} chars (vs ${textContent.length})`);
+            textContent = advancedText;
+          }
+        } catch (advError) {
+          console.warn('   ⚠️ Advanced extraction failed:', advError instanceof Error ? advError.message : 'Unknown');
+        }
+      }
     } else if (filename.toLowerCase().endsWith('.docx')) {
       console.log(`   📝 Extracting DOCX text...`);
       const buffer = Buffer.from(content, 'base64');
@@ -442,11 +519,11 @@ export async function processDocument(
       console.log(`   Content length: ${textContent.length} characters`);
     }
     
-      // Special handling: image-only PDFs/DOCs (no extractable text)
+      // Special handling: still no text after OCR attempt
       const isBinaryDoc = filename.toLowerCase().endsWith('.pdf') || filename.toLowerCase().endsWith('.docx');
       const hasNoText = !textContent || textContent.trim().length < 20;
       if (isBinaryDoc && hasNoText) {
-        console.log('   🖼️ Detected image-only or non-text PDF/DOCX – skipping embeddings and memory extraction');
+        console.log('   🖼️ No text extractable even with OCR – registering document without content');
       
         // Create minimal index entry with zero chunks
         const index = await loadDocumentIndex();
@@ -459,16 +536,6 @@ export async function processDocument(
           chunks: []
         });
         await saveDocumentIndex(index);
-      
-        // Save the original document with proper extension and binary mode
-        const ext = path.extname(filename).toLowerCase() || '.pdf';
-        const docPath = path.join(DOCS_DIR, `${documentId}${ext}`);
-        try {
-          await fs.writeFile(docPath, Buffer.from(content, 'base64'));
-          console.log(`✅ Stored original file (binary): ${docPath}`);
-        } catch (fileErr) {
-          console.warn('   ⚠️ Failed to store original binary file:', fileErr);
-        }
       
         console.log('✅ Document registered without text content');
         return {
@@ -536,8 +603,8 @@ export async function processDocument(
         for (const candidate of candidates) {
           console.log(`      - ${candidate.type}.${candidate.key} = ${candidate.value} (confidence: ${candidate.confidence})`);
           
-          // Lower threshold for document extraction (0.3 for better capture - von 0.5 reduziert)
-          if (candidate.confidence >= 0.3) {
+          // GESENKT: Threshold für Dokumente von 0.3 auf 0.25 für NOCH mehr Fakten
+          if (candidate.confidence >= 0.25) {
             await upsert(targetUserId, {
               userId: targetUserId,
               type: candidate.type,
@@ -549,7 +616,7 @@ export async function processDocument(
             memoriesExtracted++;
             console.log(`      ✅ Saved memory: ${candidate.key}`);
           } else {
-            console.log(`      ⚠️  Confidence too low (${candidate.confidence} < 0.3)`);
+            console.log(`      ⚠️  Confidence too low (${candidate.confidence} < 0.25)`);
           }
         }
       } catch (error) {
@@ -620,13 +687,40 @@ export async function searchDocuments(query: string, topK: number = 5): Promise<
     // Calculate similarity for all chunks
     const scoredChunks: Array<{ chunk: DocumentChunk; score: number }> = [];
     
+    // Collect chunks that need embeddings
+    const chunksNeedingEmbeddings: { doc: any; chunk: DocumentChunk; index: number }[] = [];
+    
     for (const doc of index.documents) {
-      for (const chunk of doc.chunks) {
-        if (chunk.embedding) {
+      for (let i = 0; i < doc.chunks.length; i++) {
+        const chunk = doc.chunks[i];
+        
+        if (!chunk.embedding && chunk.content) {
+          // Mark chunk for embedding generation
+          chunksNeedingEmbeddings.push({ doc, chunk, index: i });
+        } else if (chunk.embedding) {
           const score = cosineSimilarity(queryEmbedding, chunk.embedding);
           scoredChunks.push({ chunk, score });
         }
       }
+    }
+    
+    // Generate missing embeddings if needed
+    if (chunksNeedingEmbeddings.length > 0) {
+      console.log(`🔧 Generating ${chunksNeedingEmbeddings.length} missing embeddings...`);
+      const texts = chunksNeedingEmbeddings.map(item => item.chunk.content);
+      const newEmbeddings = await embedTexts(texts);
+      
+      // Add embeddings back to chunks and calculate scores
+      for (let i = 0; i < chunksNeedingEmbeddings.length; i++) {
+        const { chunk } = chunksNeedingEmbeddings[i];
+        const embedding = newEmbeddings[i];
+        chunk.embedding = embedding; // Store in memory only
+        
+        const score = cosineSimilarity(queryEmbedding, embedding);
+        scoredChunks.push({ chunk, score });
+      }
+      
+      console.log(`✅ Generated ${newEmbeddings.length} embeddings on-the-fly`);
     }
     
     // Sort by score and return top K

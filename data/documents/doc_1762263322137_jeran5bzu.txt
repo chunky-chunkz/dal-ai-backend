@@ -1,0 +1,73 @@
+You also need to define a CA ACL to allow the wildcard profile to be used with certain example.com host. In this example the hostgroup
+"webservers" is used. Please adjust based on your environment:
+sipe caacl-add wildcard-hosts
+Added CA ACL "wildcard-hosts"
+ACL nane: wildcard-hosts
+Enabled: TRUE
+sIpe caaci-add-profile wildcard-hosts --certprofiles wildcardcert
+ACL name: wildcard-hosts
+Enabled: TRUE
+Profiles: collidcardcert
+Number of members added 1
+Sipe caacl-add-host wildcard-hosts --hostgroups webservers
+ACL nane: wildcard-hosts
+Enabled: TRUE
+Profiles: califideardcert
+Host Groups: webservers
+Number of members added 1
+An additional step is required in case IPA 4.4 (RHEL 7.3) and later is used. It does not apply to IPA ‹ 4.4;
+• Ipa caacl-add-ca wildcard-hosts --cas ipa
+ACL name: wildcard-hosts
+Enabled: TRUE
+CAs: 1pa
+Number of members added 1
+Finally create a CR with subject CN-webOl.example.com and issue the certificate. The process how to create the CSR is out of scope for this
+aricle but is explained in great detail in the Identity-Management guide:
+
+sIpa cert-request cert.csr principal host/webol.exanple.com
+profile caldidcardcert
+Issuing CA: Ipa
+Subject: Cie*.web@1.exarple.com,O-EXAMPLE.COM
+Issuer: CH-CertIficate Authority,O-EXAMPLE.COM
+Not Before: Wed Jun 28 08:27:37 2017 UTC
+Not After: Sat Jun 29 08:27:37 2019 UTC
+Fingerprint (1D5): c2:02:6:43:5:81:53:9d:56:06:a7:1c:58:28:db:ea
+Fingerprint (SHA1): CB:0a:0e:16:df:0e:33:bb:9B:ed:74:bd:34:6fif1:17:04:711a3192
+Serial number: 18
+Serial number (hex): @x12
+The new certificate has been issued and you can find the certificate in the Id database using the Ipa cert-find command. To verify the new
+certificate is using a wildcard DNS name as Subject Common Name (CN) and also as Subject Alternative Name (SAN) extension you can use the
+following command:
+$ ipa cert-show (cert-serial) • out cert.crt | openssl 509 -in cert.ert -noout -textigrep -e "Subjecti" -e "ONS"
+Subject: O-EXAMPLE.CON, CN-*.web@1.example.com
+oNS:*_web@1.exanple.com, @NS:web01.example.com
+Another way to issue the certificate is to tell certmonger to do the work for you. In this case the command needs to be executed on the host where
+you want to use the certificate. Here is a simple example. Please make sure to use the appropriate certmonger options to meet the requirements in
+Sipa-getcert request-d/etc/httpd/ellasp/etc/httpd/allas/pudfile.txt-n wildcardCert +T calfldcardcert
+New signing request 20170628084112" added.
+5 getcert list -1 20170020084112
+Number of certificates and requests being tracked s.
+Request ID 20170620084112'
+statust MONITORING
+stuckt no
+key pair storage: type-liss06,location-'/etc/httpd/alias",nicknane-'wildcardCert', token-'NSS Certificate
+Ds.pinfites/etc/httpd/allas/pwdfile.txt
+certificate: type-S506,location:/etc/httpd/allas.nicknane»wildcardCert',token-'NSS Certificate De
+CA: IPA
+Issuer: CirCertificate Authorfty,o-EXA/PLE.COM
+subject: Ci-*.webot.example.com,o-EXAMPLE.COM
+expires: 2019-06-29 08:41:15 UTC
+ans:* webol.example.com.web01.exasple.com
+key usage: digitalsignature, nonRepudiation, keyEncipherment, dataEncipherment
+ekut id-ke-serverauth. id-kp-clientauth |
+post-save connand:
+tracks yes
+auto-reneut yes
+Root Cause
+DNS name assertions via the CN field are deprecated for a long time already. Please check the details in RFC2818. Some modern client software
+finally started to remov CN name processing support. The Chrome browser (starting with v.58) is such an example.
+Products) Red Hat Enterprise Linux Category Configure
+Tags certificates ipa
+This solution is part of Red Hat's fast-track publication program, providing a huge library of solutions that Red Hat engineers have created while
+supporting our customers. To give you the knowledge you need the instant it becomes available, these articles may be presented in a raw and
+unedited form.

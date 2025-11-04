@@ -324,11 +324,14 @@ function calculateEphemeralPenalty(candidate: Candidate): number {
 }
 
 /**
- * Get recommended action based on score
+ * Get recommended action based on score (THRESHOLDS LOWERED to save more)
+ * - >= 0.6: auto-save (was 0.75)
+ * - >= 0.35: ask user (was 0.5)
+ * - < 0.35: reject
  */
 export function getRecommendedAction(score: number): 'auto' | 'ask' | 'reject' {
-  if (score >= 0.75) return 'auto';
-  if (score >= 0.5) return 'ask';
+  if (score >= 0.6) return 'auto';
+  if (score >= 0.35) return 'ask';
   return 'reject';
 }
 

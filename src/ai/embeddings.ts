@@ -12,9 +12,17 @@ import { pipeline, env } from '@xenova/transformers';
 import fs from 'fs/promises';
 import path from 'path';
 
-// Disable remote models for security (use local models only)
+// Configure transformers environment
 env.allowRemoteModels = true;
 env.allowLocalModels = true;
+
+// Set cache directory to avoid repeated downloads
+env.cacheDir = path.resolve('src/data/.cache');
+
+// Increase timeout for slow connections (30 seconds)
+if (typeof env.remoteModelFetchTimeout === 'number') {
+  env.remoteModelFetchTimeout = 30000;
+}
 
 interface EmbeddingCache {
   model: string;
@@ -35,7 +43,8 @@ class EmbeddingService {
   private cache: EmbeddingCache | null = null;
 
   constructor() {
-    this.model = process.env.EMBEDDING_MODEL || 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2';
+    // Use Xenova's distilbert model which is smaller and more reliable
+    this.model = process.env.EMBEDDING_MODEL || 'Xenova/paraphrase-multilingual-MiniLM-L12-v2';
     this.cachePath = path.resolve('src/data/embeddings.json');
     this.dataDir = path.dirname(this.cachePath);
   }
@@ -47,14 +56,34 @@ class EmbeddingService {
     if (this.pipeline) return;
 
     try {
-  console.log(`🔧 Loading embedding model: ${this.model}`);
+      console.log(`🔧 Loading embedding model: ${this.model}`);
+      
+      // Try with quantized model first (smaller, faster download)
       this.pipeline = await pipeline('feature-extraction', this.model, {
-        quantized: true
+        quantized: true,
+        progress_callback: (progress: any) => {
+          if (progress.status === 'progress' && progress.file) {
+            console.log(`📥 Downloading ${progress.file}: ${progress.progress?.toFixed(0) || 0}%`);
+          }
+        }
       }) as FeatureExtractionPipeline;
+      
       console.log('✅ Embedding model loaded successfully');
     } catch (error) {
       console.error('❌ Failed to load embedding model:', error);
-      throw new Error(`Failed to load embedding model '${this.model}': ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.log('💡 Trying alternative model: Xenova/all-MiniLM-L6-v2');
+      
+      // Fallback to a smaller, more reliable model
+      try {
+        this.model = 'Xenova/all-MiniLM-L6-v2';
+        this.pipeline = await pipeline('feature-extraction', this.model, {
+          quantized: true
+        }) as FeatureExtractionPipeline;
+        console.log('✅ Fallback embedding model loaded successfully');
+      } catch (fallbackError) {
+        console.error('❌ Fallback model also failed:', fallbackError);
+        throw new Error(`Failed to load any embedding model. Please check your internet connection and try again. Original error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
     }
   }
 

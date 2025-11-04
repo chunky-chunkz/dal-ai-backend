@@ -19,6 +19,8 @@ import { registerUserRoutes } from './routes/user.routes.js';
 import { profileRoutes } from './routes/profile.routes.js';
 import { memoryRoutes } from './routes/memory.routes.js';
 import { documentRoutes } from './routes/document.routes.js';
+import memoryStatsRoutes from './routes/stats.memory.routes.js';
+import memoryMaintenanceRoutes from './routes/memory-maintenance.routes.js';
 
 export async function buildApp(): Promise<FastifyInstance> {
   // Create Fastify instance with logging
@@ -54,7 +56,7 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   // Register CORS plugin with SSE-friendly settings and OAuth cookie support
   await fastify.register(cors, {
-    origin: process.env.FRONTEND_ORIGIN || process.env.CORS_ORIGIN || "http://localhost:3000",
+    origin: process.env.FRONTEND_ORIGIN || process.env.CORS_ORIGIN || "http://localhost:3000" || "https://dal-ai.sunrise-avengers.com",
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Accept', 'x-session-id']
@@ -155,6 +157,12 @@ export async function buildApp(): Promise<FastifyInstance> {
   
   // Register document routes with /api prefix
   await fastify.register(documentRoutes, { prefix: '/api' });
+  
+  // Register memory statistics routes
+  await fastify.register(memoryStatsRoutes);
+  
+  // Register memory maintenance routes
+  await fastify.register(memoryMaintenanceRoutes, { prefix: '/api' });
 
   return fastify;
 }

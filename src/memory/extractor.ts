@@ -20,12 +20,20 @@ const extractionRateLimiter = new ExtractionRateLimiter();
 
 /**
  * Enhanced system prompt for the LLM to extract memory candidates (strict JSON)
- * Based on recommended policy examples
+ * UPDATED: More aggressive extraction - prefer saving facts (even borderline ones)
  */
-const EXTRACTION_SYSTEM_PROMPT = `Extrahiere aus der deutschen Aussage nur langfristig sinnvolle, harmlose Fakten/Präferenzen.
+const EXTRACTION_SYSTEM_PROMPT = `Extrahiere aus der deutschen Aussage ALLE langfristig potenziell nützlichen Fakten und Präferenzen.
+Sei GROSSZÜGIG bei der Extraktion - lieber mehr speichern als zu wenig. Extrahiere auch implizite Präferenzen und Fakten.
 Antworte ausschliesslich als JSON-Array von Objekten mit Feldern:
 person, type (preference|profile_fact|contact|task_hint), key, value, confidence (0..1).
 Speichere niemals geheime oder sensible Daten. Wenn nichts geeignet ist: [].
+
+WICHTIG: Extrahiere MEHR Fakten - auch wenn sie nur teilweise relevant erscheinen.
+- Bei Hobbies, Interessen, Vorlieben: IMMER extrahieren
+- Bei Tätigkeiten, Rollen, Teams: IMMER extrahieren  
+- Bei Zeitpräferenzen (morgens/abends): IMMER extrahieren
+- Bei Tool-/Software-Präferenzen: IMMER extrahieren
+- Bei Arbeitsgewohnheiten: IMMER extrahieren
 
 Beispiele:
 "Romans Lieblingsfarbe ist blau." ->
@@ -37,11 +45,16 @@ Beispiele:
 [{"person":"self","type":"profile_fact","key":"name","value":"anna","confidence":0.85}]
 
 "Ich trinke gerne Kaffee am Morgen." ->
-[{"person":"self","type":"preference","key":"getränk_zeit","value":"kaffee morgens","confidence":0.88}]
+[{"person":"self","type":"preference","key":"getränk","value":"kaffee","confidence":0.88},
+ {"person":"self","type":"preference","key":"getränk_zeit","value":"kaffee morgens","confidence":0.85}]
 
 "Ich arbeite als Software-Entwickler in Berlin." ->
 [{"person":"self","type":"profile_fact","key":"beruf","value":"software-entwickler","confidence":0.90},
  {"person":"self","type":"profile_fact","key":"arbeitsort","value":"berlin","confidence":0.85}]
+
+"Ich mag Python und TypeScript." ->
+[{"person":"self","type":"preference","key":"programmiersprache","value":"python","confidence":0.82},
+ {"person":"self","type":"preference","key":"programmiersprache_2","value":"typescript","confidence":0.82}]
 
 "Meine Adresse ist Musterstrasse 123." -> []
 
@@ -51,9 +64,15 @@ Beispiele:
 "Erinnere mich jeden Freitag an das Meeting." ->
 [{"person":"self","type":"task_hint","key":"wöchentliches_meeting","value":"jeden freitag","confidence":0.75}]
 
+"Ich bin im DevOps Team." ->
+[{"person":"self","type":"profile_fact","key":"team","value":"devops","confidence":0.85}]
+
+"Ich lese gerne Science Fiction Bücher." ->
+[{"person":"self","type":"preference","key":"buch_genre","value":"science fiction","confidence":0.88}]
+
 NIE speichern: Passwörter, TAN, IBAN, Kreditkarten, Ausweis-Nr., Gesundheitsdaten, religiöse/politische Überzeugungen, private Adressen.
-NIE speichern: Passwörter, TAN, IBAN, Kreditkarten, Ausweis-Nr., Gesundheitsdaten, religiöse/politische Überzeugungen, private Adressen.
-NUR Auto-Save: stabile Präferenzen & neutrale Profile-Fakten (Lieblingsfarbe, bevorzugte Sprache, Name, Rolle, Team).`;
+IMMER speichern: Harmlose Präferenzen, Hobbies, Berufe, Teams, Rollen, Arbeitszeiten, Tool-Vorlieben.`;
+
 
 /**
  * Regex patterns for fallback extraction of common German patterns

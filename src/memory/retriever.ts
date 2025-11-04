@@ -7,6 +7,8 @@
 
 import { embedTexts } from '../ai/embeddings.js';
 import { listByUser, type MemoryItem } from './store.js';
+import { logMemoryEvent, now, hh } from './metrics/logger.js';
+import crypto from 'crypto';
 
 export interface RetrievalResult {
   memory: MemoryItem;
@@ -147,7 +149,21 @@ export async function retrieveForPrompt(
   query: string,
   limit: number = 5
 ): Promise<MemoryContext> {
+  const t0 = performance.now();
+  const queryHash = crypto.createHash('md5').update(query).digest('hex').substring(0, 8);
+  
   const relevant = await findRelevant(userId, query, limit);
+  
+  // Log retrieval event
+  const latencyMs = performance.now() - t0;
+  await logMemoryEvent({
+    type: "retrieve",
+    userId,
+    queryHash,
+    returned: relevant.length,
+    latencyMs,
+    ts: now()
+  });
   
   if (relevant.length === 0) {
     return {

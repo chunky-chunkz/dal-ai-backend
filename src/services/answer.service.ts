@@ -24,6 +24,7 @@ import { localLLM } from '../ai/localLLM.js';
 import { evaluateAndMaybeStore, type EvaluationResult } from '../memory/manager.js';
 import { listByUser, type MemoryItem } from '../memory/store.js';
 import { retrieveForPrompt } from '../memory/retriever.js';
+import { searchDocuments } from './document.service.js';
 
 /**
  * Standard response interface for answer queries
@@ -39,7 +40,7 @@ export interface AnswerResponse {
 const faqRepository = new FaqRepository();
 
 /**
- * Generate direct chat response using local LLM without RAG/FAQ
+ * Generate direct chat response using local LLM with Document RAG support
  */
 async function generateDirectChatResponse(
   question: string, 
@@ -53,8 +54,24 @@ async function generateDirectChatResponse(
     const maxTokens = settings?.maxTokens ?? 300;
     const preferredModel = settings?.model ?? 'phi3';
 
+    // Search for relevant documents (RAG)
+    console.log('🔍 Searching documents for:', question.substring(0, 50));
+    const documentResults = await searchDocuments(question, 3); // Top 3 results
+    
     // Build conversational prompt
     let prompt = '';
+    
+    // Add document context if found
+    if (documentResults && documentResults.length > 0) {
+      console.log(`📚 Found ${documentResults.length} relevant document chunks`);
+      prompt += `Relevante Dokumente:\n`;
+      for (const doc of documentResults) {
+        prompt += `\n--- ${doc.filename} ---\n${doc.text}\n`;
+      }
+      prompt += `\n`;
+    } else {
+      console.log('📚 No relevant documents found');
+    }
     
     // Add user memory context if available
     if (memoryContext && memoryContext.trim()) {
@@ -66,8 +83,10 @@ async function generateDirectChatResponse(
     
     prompt += `Frage: ${question}`;
 
-    // System prompt for normal conversation
-    const systemPrompt = `Du bist ein hilfsbreiter, freundlicher deutschsprachiger AI-Assistent. Antworte natürlich und persönlich auf Fragen. Nutze die bereitgestellten Informationen über den Benutzer, um deine Antworten zu personalisieren. Antworte in 1-3 Sätzen, sei präzise und freundlich.`;
+    // System prompt for normal conversation with document context
+    const systemPrompt = documentResults && documentResults.length > 0
+      ? `Du bist ein hilfsbreiter, freundlicher deutschsprachiger AI-Assistent. Beantworte die Frage basierend auf den bereitgestellten Dokumenten. Wenn die Dokumente relevante Informationen enthalten, nutze sie für deine Antwort. Sei präzise und beziehe dich auf konkrete Fakten aus den Dokumenten. Antworte in 2-4 Sätzen.`
+      : `Du bist ein hilfsbreiter, freundlicher deutschsprachiger AI-Assistent. Antworte natürlich und persönlich auf Fragen. Nutze die bereitgestellten Informationen über den Benutzer, um deine Antworten zu personalisieren. Antworte in 1-3 Sätzen, sei präzise und freundlich.`;
 
     // Try different models, starting with user's preferred model
     // Erweiterte Liste mit Premium-Modellen

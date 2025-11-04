@@ -6,6 +6,7 @@
  */
 
 import { listByUser, upsert, remove, type MemoryItem } from './store.js';
+import { logMemoryEvent, now } from './metrics/logger.js';
 
 export interface SummaryResult {
   original: MemoryItem[];
@@ -171,6 +172,15 @@ export async function summarizeCluster(
     }
     
     console.log(`✅ Created summary, archived ${archived} memories`);
+    
+    // Log summarization event
+    await logMemoryEvent({
+      type: 'summarize',
+      userId,
+      clusterSize: cluster.length,
+      archived,
+      ts: now()
+    });
     
     return {
       original: cluster,

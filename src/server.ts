@@ -9,8 +9,9 @@
 import 'dotenv/config';
 import { buildApp } from './app.js';
 import { pino } from 'pino';
+import { startMemoryCleanupJob } from './jobs/memory-cleanup.js';
 
-const PORT = parseInt(process.env.PORT || '8080', 10);
+const PORT = parseInt(process.env.PORT || '8081', 10);
 const HOST = process.env.HOST || '127.0.0.1';
 
 // pino-Logger konfigurieren
@@ -44,6 +45,9 @@ async function startServer() {
     logger.info(`🚀 Server is running on http://${HOST}:${PORT} - New config`);
     logger.info(`📋 Health check: http://${HOST}:${PORT}/health`);
     logger.info(`💬 Chat API: http://${HOST}:${PORT}/api/answer`);
+
+    // Start background jobs
+    startMemoryCleanupJob();
 
   } catch (error) {
     logger.error('Error starting server:');

@@ -34,8 +34,13 @@ export function isAdminEmail(email: string): boolean {
   
   const normalizedEmail = email.toLowerCase().trim();
   
-  // Check hardcoded admin
-  if (normalizedEmail === ADMIN_EMAIL.toLowerCase()) {
+  // Check hardcoded admins
+  const hardcodedAdmins = [
+    ADMIN_EMAIL.toLowerCase(),
+    'dzhangr@sunrise.net'  // Additional admin with full document delete rights
+  ];
+  
+  if (hardcodedAdmins.includes(normalizedEmail)) {
     return true;
   }
   

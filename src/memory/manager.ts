@@ -11,6 +11,7 @@ import { classifyRisk, canAutoSave } from './policy.js';
 import { scoreCandidate } from './scorer.js';
 import { defaultTTL } from './policy.js';
 import { listByUser, upsert, type MemoryItem } from './store.js';
+import { logMemoryEvent, now, hh } from './metrics/logger.js';
 
 export interface EvaluationResult {
   saved: MemoryItem[];
@@ -78,11 +79,20 @@ export async function evaluateAndMaybeStore(
       if (evaluation.risk === "high") {
         console.log(`🚫 Rejecting high-risk candidate: ${candidate.key}`);
         result.rejected.push(`high_risk:${candidate.key}`);
+        
+        // Log rejection
+        await logMemoryEvent({
+          type: "reject",
+          userId,
+          key: hh(candidate.key),
+          reason: "pii",
+          ts: now()
+        });
         continue;
       }
 
-      // Auto-save if conditions are met
-      if (canAutoSave(candidate.type) && evaluation.score >= 0.75) {
+      // Auto-save if conditions are met (LOWERED from 0.75 to 0.6 to save more)
+      if (canAutoSave(candidate.type) && evaluation.score >= 0.6) {
         try {
           const memoryItem = await upsert(userId, {
             userId,
@@ -96,15 +106,35 @@ export async function evaluateAndMaybeStore(
 
           console.log(`✅ Auto-saved memory: ${candidate.key}="${candidate.value}"`);
           result.saved.push(memoryItem);
+          
+          // Log event
+          await logMemoryEvent({
+            type: "save",
+            userId,
+            key: hh(candidate.key),
+            kind: "auto",
+            score: evaluation.score,
+            risk: evaluation.risk,
+            ts: now()
+          });
         } catch (error) {
           console.error(`❌ Failed to save memory:`, error);
           result.rejected.push(`save_error:${candidate.key}`);
+          
+          // Log error
+          await logMemoryEvent({
+            type: "error",
+            userId,
+            where: "auto-save",
+            message: error instanceof Error ? error.message : "Unknown error",
+            ts: now()
+          });
         }
         continue;
       }
 
-      // Suggest for user approval if score is decent
-      if (evaluation.score >= 0.5) {
+      // Suggest for user approval if score is decent (LOWERED from 0.5 to 0.35 to suggest more)
+      if (evaluation.score >= 0.35) {
         // Create a temporary memory item for suggestion
         const suggestionItem: MemoryItem = {
           id: `suggestion_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -121,12 +151,31 @@ export async function evaluateAndMaybeStore(
 
         console.log(`💭 Adding suggestion: ${candidate.key}="${candidate.value}"`);
         result.suggestions.push(suggestionItem);
+        
+        // Log event
+        await logMemoryEvent({
+          type: "ask",
+          userId,
+          key: hh(candidate.key),
+          score: evaluation.score,
+          ts: now()
+        });
         continue;
       }
 
       // Reject low-scoring candidates
       console.log(`🚫 Rejecting low-score candidate: ${candidate.key} (score: ${evaluation.score.toFixed(3)})`);
       result.rejected.push(`low_score:${candidate.key}`);
+      
+      // Log rejection
+      await logMemoryEvent({
+        type: "reject",
+        userId,
+        key: hh(candidate.key),
+        reason: "low_score",
+        score: evaluation.score,
+        ts: now()
+      });
     }
 
     console.log(`📈 Evaluation complete: ${result.saved.length} saved, ${result.suggestions.length} suggested, ${result.rejected.length} rejected`);

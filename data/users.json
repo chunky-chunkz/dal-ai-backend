@@ -12,5 +12,12 @@
     "passwordHash": "$argon2id$v=19$m=19456,t=2,p=1$iwQGfXp1SArflJM3MqSsKg$Jt7RYWVW12cb1YVCFKmL/jNPf+cC36NNeFZgmCr2C0I",
     "displayName": "Roman",
     "createdAt": "2025-10-13T11:55:23.859Z"
+  },
+  {
+    "id": "925d5c7583497875a6ecea46829ba129",
+    "email": "leif.fieger@sunrise.net",
+    "passwordHash": "$argon2id$v=19$m=19456,t=2,p=1$JlJO4jUjKSHQcCgXzWOYXg$hNX3LMo2NSdYJvctRvmNj45qO3ADjIeJw7ViMrFw/XM",
+    "displayName": "Leif",
+    "createdAt": "2025-11-04T08:47:18.654Z"
   }
 ]
