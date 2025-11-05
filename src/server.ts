@@ -12,7 +12,7 @@ import pino from 'pino';
 
 import { startMemoryCleanupJob } from './jobs/memory-cleanup.js';
 
-const PORT = parseInt(process.env.PORT || '8081', 10);
+const PORT = parseInt(process.env.PORT || '4000', 10);
 const HOST = process.env.HOST || '127.0.0.1';
 
 // pino-Logger konfigurieren

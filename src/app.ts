@@ -168,14 +168,8 @@ export async function buildApp(): Promise<FastifyInstance> {
   // Register memory maintenance routes
   await fastify.register(memoryMaintenanceRoutes, { prefix: '/api' });
 
-  fastify.get('/health', async () => ({ status: 'ok', time: new Date().toISOString() }));
-
-  fastify.get('/api/me', async () => ({
-    user: { id: 'demo', name: 'Demo User', email: 'demo@example.com' },
-    tokens: { access: 'dummy', exp: Date.now() + 3600_000 }
-  }));
-
-
+  // Health route is already registered via healthRoutes above
+  // Removed duplicate: fastify.get('/health', ...)
 
   return fastify;
 }

@@ -53,3 +53,5 @@
 {"type":"retrieve","userId":"user-3","queryHash":"58c45264","returned":5,"latencyMs":0.10420000000158325,"ts":1762337340460}
 {"type":"consolidate","userId":"user-3","action":"update","originalIds":["mem_1762337340461_1","mem_1762337340461_2"],"ts":1762337340461}
 {"type":"error","where":"test-scenario","message":"Simulated error for testing","ts":1762337340462}
+{"type":"retrieve","userId":"2890bb90ef3fca171ec9ecab81c5eb95","queryHash":"9c1079d1","returned":5,"latencyMs":2267.417299999972,"ts":1762348764838}
+{"type":"retrieve","userId":"2890bb90ef3fca171ec9ecab81c5eb95","queryHash":"2cb45843","returned":5,"latencyMs":370.0634999999311,"ts":1762350146629}
