@@ -8,7 +8,8 @@
  */
 import 'dotenv/config';
 import { buildApp } from './app.js';
-import { pino } from 'pino';
+import pino from 'pino';
+
 import { startMemoryCleanupJob } from './jobs/memory-cleanup.js';
 
 const PORT = parseInt(process.env.PORT || '8081', 10);

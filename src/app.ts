@@ -5,7 +5,7 @@
  * - Register routes: local.routes, auth.routes (ms), user.routes.
  * - GET /health -> {status:"ok"}.
  */
-import Fastify, { FastifyInstance } from 'fastify';
+import Fastify, { type FastifyInstance } from 'fastify';
 import helmet from '@fastify/helmet';
 import cors from '@fastify/cors';
 import cookie from '@fastify/cookie';
@@ -174,6 +174,8 @@ export async function buildApp(): Promise<FastifyInstance> {
     user: { id: 'demo', name: 'Demo User', email: 'demo@example.com' },
     tokens: { access: 'dummy', exp: Date.now() + 3600_000 }
   }));
+
+
 
   return fastify;
 }

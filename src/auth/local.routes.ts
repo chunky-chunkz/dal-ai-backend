@@ -1,4 +1,5 @@
-import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+
 import { RegisterSchema, LoginSchema } from './validators.js';
 import { hashPassword, verifyPassword } from './password.js';
 import { verifyAdminCredentials, isAdminEmail } from './admin.js';

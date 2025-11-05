@@ -5,7 +5,8 @@
  * - Protect with requireAuth
  */
 
-import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+
 import { requireAuth } from '../middleware/authGuard.js';
 import { getProfile, setProfile } from '../memory/profileStore.js';
 

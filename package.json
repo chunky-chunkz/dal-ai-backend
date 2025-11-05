@@ -403,7 +403,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "build:server": "tsc -p tsconfig.run.json"
   },
   "repository": {
     "type": "git",

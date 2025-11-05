@@ -5,7 +5,8 @@
  * evaluation, consent management, and privacy controls.
  */
 
-import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+
 import { listByUser, remove, clearUser } from '../memory/store.js';
 import { evaluateAndMaybeStore, saveSuggestion } from '../memory/manager.js';
 import { retrieveForPrompt, getAllGrouped } from '../memory/retriever.js';

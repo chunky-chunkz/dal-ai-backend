@@ -1,0 +1,29 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "noEmitOnError": false,
+    "skipLibCheck": true,
+    "exactOptionalPropertyTypes": false,
+    "verbatimModuleSyntax": false
+  },
+  "include": [
+    "src/server.ts",
+    "src/app.ts",
+    "src/routes/**/*.ts",
+    "src/controllers/**/*.ts",
+    "src/auth/**/*.ts"
+  ],
+  "exclude": [
+    "**/*.test.ts",
+    "tests/**",
+    "src/tests/**",
+    "src/utils/**",
+    "src/ai/**",
+    "src/memory/**",
+    "src/services/**",
+    "src/repos/**",
+    "src/users/**",
+    "src/documents/**"
+  ]
+}

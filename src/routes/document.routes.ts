@@ -4,7 +4,8 @@
  * Endpoints for uploading, searching, and managing documents
  */
 
-import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+
 import { 
   processDocument, 
   searchDocuments, 
