@@ -20,6 +20,7 @@ import { profileRoutes } from './routes/profile.routes.js';
 import { memoryRoutes } from './routes/memory.routes.js';
 import { documentRoutes } from './routes/document.routes.js';
 import memoryStatsRoutes from './routes/stats.memory.routes.js';
+import documentStatsRoutes from './routes/stats.documents.routes.js';
 import memoryMaintenanceRoutes from './routes/memory-maintenance.routes.js';
 
 export async function buildApp(): Promise<FastifyInstance> {
@@ -64,7 +65,7 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   // Register cookie plugin for session management
   await fastify.register(cookie, {
-    secret: process.env.SESSION_SECRET || 'change_me_to_a_secure_random_string',
+    secret: process.env.SESSION_SECRET || 'change_me_to_a_secure_random_stri13258ng',
     hook: 'onRequest', // Parse cookies on every request
     parseOptions: {
       httpOnly: true,
@@ -160,6 +161,9 @@ export async function buildApp(): Promise<FastifyInstance> {
   
   // Register memory statistics routes
   await fastify.register(memoryStatsRoutes);
+  
+  // Register document statistics routes
+  await fastify.register(documentStatsRoutes);
   
   // Register memory maintenance routes
   await fastify.register(memoryMaintenanceRoutes, { prefix: '/api' });

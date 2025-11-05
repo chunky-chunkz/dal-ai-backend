@@ -267,15 +267,14 @@ This auth module works seamlessly with both user storage options:
 import { userStore } from '../users';
 import { hashPassword } from '../auth';
 
-const user = await userStore.createUser({
+const user = await userRepo.createUser({
   email: 'user@example.com',
   passwordHash: await hashPassword('password123'),
   displayName: 'John Doe'
 });
 
-// With Prisma repository
+// User repository uses JSON storage
 import { userRepo } from '../users';
-// Same API, different implementation
 ```
 
 ## Troubleshooting

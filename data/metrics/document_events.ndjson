@@ -1,0 +1,51 @@
+{"type":"index","docId":"doc-1","title":"FAQ: Internet-Tarife","category":"internet","wordCount":450,"ts":1762339022844}
+{"type":"index","docId":"doc-2","title":"Anleitung: Router-Installation","category":"hardware","wordCount":820,"ts":1762339022846}
+{"type":"index","docId":"doc-3","title":"Mobilfunk-Verträge","category":"mobilfunk","wordCount":650,"ts":1762339022846}
+{"type":"index","docId":"doc-4","title":"Störungsbehebung WLAN","category":"support","wordCount":390,"ts":1762339022847}
+{"type":"index","docId":"doc-5","title":"Tarifwechsel durchführen","category":"verträge","wordCount":520,"ts":1762339022848}
+{"type":"index","docId":"doc-6","title":"Kündigungsfristen","category":"verträge","wordCount":280,"ts":1762339022849}
+{"type":"index","docId":"doc-7","title":"Speedtest durchführen","category":"support","wordCount":340,"ts":1762339022850}
+{"type":"index","docId":"doc-8","title":"TV-Angebote","category":"tv","wordCount":710,"ts":1762339022851}
+{"type":"index","docId":"doc-1","title":"FAQ: Internet-Tarife","category":"internet","wordCount":450,"ts":1762339041356}
+{"type":"index","docId":"doc-2","title":"Anleitung: Router-Installation","category":"hardware","wordCount":820,"ts":1762339041358}
+{"type":"index","docId":"doc-3","title":"Mobilfunk-Verträge","category":"mobilfunk","wordCount":650,"ts":1762339041359}
+{"type":"index","docId":"doc-4","title":"Störungsbehebung WLAN","category":"support","wordCount":390,"ts":1762339041360}
+{"type":"index","docId":"doc-5","title":"Tarifwechsel durchführen","category":"verträge","wordCount":520,"ts":1762339041361}
+{"type":"index","docId":"doc-6","title":"Kündigungsfristen","category":"verträge","wordCount":280,"ts":1762339041362}
+{"type":"index","docId":"doc-7","title":"Speedtest durchführen","category":"support","wordCount":340,"ts":1762339041363}
+{"type":"index","docId":"doc-8","title":"TV-Angebote","category":"tv","wordCount":710,"ts":1762339041364}
+{"type":"search","userId":"user-2","query":"Internet langsam","queryHash":"deccff6f","resultsCount":3,"latencyMs":45,"ts":1762339041366}
+{"type":"search","userId":"user-2","query":"Tarif wechseln","queryHash":"2e290d4f","resultsCount":5,"latencyMs":32,"ts":1762339041367}
+{"type":"search","userId":"user-1","query":"Router einrichten","queryHash":"956f0a7e","resultsCount":4,"latencyMs":28,"ts":1762339041368}
+{"type":"search","userId":"user-1","query":"WLAN Probleme","queryHash":"9b3743c2","resultsCount":6,"latencyMs":51,"ts":1762339041368}
+{"type":"search","userId":"user-2","query":"Kündigungsfrist","queryHash":"74990b52","resultsCount":2,"latencyMs":19,"ts":1762339041369}
+{"type":"search","userId":"user-3","query":"Speedtest","queryHash":"9daa55f3","resultsCount":3,"latencyMs":22,"ts":1762339041370}
+{"type":"search","userId":"user-2","query":"Internet langsam","queryHash":"deccff6f","resultsCount":3,"latencyMs":41,"ts":1762339041371}
+{"type":"search","userId":"user-2","query":"Mobilfunk Tarife","queryHash":"b3590fe0","resultsCount":4,"latencyMs":38,"ts":1762339041372}
+{"type":"search","userId":"user-1","query":"TV Sender","queryHash":"c75fe0a6","resultsCount":2,"latencyMs":25,"ts":1762339041372}
+{"type":"search","userId":"user-2","query":"Router einrichten","queryHash":"956f0a7e","resultsCount":4,"latencyMs":31,"ts":1762339041373}
+{"type":"retrieve","userId":"user-1","docId":"doc-4","docTitle":"Störungsbehebung WLAN","relevanceScore":0.89,"source":"search","ts":1762339041374}
+{"type":"retrieve","userId":"user-3","docId":"doc-5","docTitle":"Tarifwechsel durchführen","relevanceScore":0.92,"source":"search","ts":1762339041374}
+{"type":"retrieve","userId":"user-2","docId":"doc-2","docTitle":"Anleitung: Router-Installation","relevanceScore":0.87,"source":"search","ts":1762339041376}
+{"type":"retrieve","userId":"user-1","docId":"doc-4","docTitle":"Störungsbehebung WLAN","relevanceScore":0.91,"source":"search","ts":1762339041376}
+{"type":"retrieve","userId":"user-3","docId":"doc-6","docTitle":"Kündigungsfristen","relevanceScore":0.95,"source":"search","ts":1762339041377}
+{"type":"retrieve","userId":"user-3","docId":"doc-7","docTitle":"Speedtest durchführen","relevanceScore":0.88,"source":"search","ts":1762339041377}
+{"type":"retrieve","userId":"user-1","docId":"doc-4","docTitle":"Störungsbehebung WLAN","relevanceScore":0.9,"source":"search","ts":1762339041378}
+{"type":"retrieve","userId":"user-3","docId":"doc-3","docTitle":"Mobilfunk-Verträge","relevanceScore":0.85,"source":"search","ts":1762339041379}
+{"type":"retrieve","userId":"user-2","docId":"doc-8","docTitle":"TV-Angebote","relevanceScore":0.82,"source":"search","ts":1762339041379}
+{"type":"retrieve","userId":"user-1","docId":"doc-2","docTitle":"Anleitung: Router-Installation","relevanceScore":0.86,"source":"related","ts":1762339041380}
+{"type":"click","userId":"user-2","docId":"doc-4","position":1,"ts":1762339041381}
+{"type":"click","userId":"user-3","docId":"doc-5","position":1,"ts":1762339041381}
+{"type":"click","userId":"user-1","docId":"doc-2","position":2,"ts":1762339041382}
+{"type":"click","userId":"user-1","docId":"doc-4","position":1,"ts":1762339041382}
+{"type":"click","userId":"user-2","docId":"doc-6","position":1,"ts":1762339041382}
+{"type":"click","userId":"user-1","docId":"doc-7","position":2,"ts":1762339041383}
+{"type":"click","userId":"user-1","docId":"doc-4","position":1,"ts":1762339041383}
+{"type":"feedback","userId":"user-2","docId":"doc-4","query":"WLAN Probleme","helpful":true,"ts":1762339041384}
+{"type":"feedback","userId":"user-2","docId":"doc-5","query":"Tarif wechseln","helpful":true,"ts":1762339041385}
+{"type":"feedback","userId":"user-2","docId":"doc-2","query":"Router einrichten","helpful":true,"ts":1762339041385}
+{"type":"feedback","userId":"user-2","docId":"doc-8","query":"TV Sender","helpful":false,"ts":1762339041386}
+{"type":"feedback","userId":"user-2","docId":"doc-6","query":"Kündigungsfrist","helpful":true,"ts":1762339041386}
+{"type":"update","docId":"doc-1","changeType":"content","ts":1762339041387}
+{"type":"delete","docId":"doc-old","reason":"outdated","ts":1762339041387}
+{"type":"error","where":"search-endpoint","message":"Query too long","ts":1762339041388}
