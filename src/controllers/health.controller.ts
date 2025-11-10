@@ -16,3 +16,5 @@ export class HealthController {
     return response;
   }
 }
+
+export default HealthController;

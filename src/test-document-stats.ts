@@ -162,7 +162,7 @@ async function generateDocumentTestData() {
   console.log('  ⚠️ Logged error');
 
   console.log('\n✅ Test data generation complete!');
-  console.log('📊 Check: http://localhost:8081/api/stats/documents');
+  console.log('📊 Check: http://localhost:4000/api/stats/documents');
 }
 
 generateDocumentTestData().catch(console.error);
