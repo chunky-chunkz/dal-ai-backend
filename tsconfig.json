@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "CommonJS",
-    "moduleResolution": "Node",
+    "module": "es2022",            // ESM-Modus erlaubt import.meta und top-level await
+    "moduleResolution": "node",
     "rootDir": "src",
     "outDir": "dist",
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": ["src"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/tests/**"]       // Tests aus dem Build ausschließen
 }
