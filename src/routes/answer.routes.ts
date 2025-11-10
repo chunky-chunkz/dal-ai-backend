@@ -29,21 +29,21 @@ export async function answerRoutes(fastify: FastifyInstance) {
         200: {
           type: 'object',
           properties: {
-            answer: { 
+            answer: {
               type: 'string',
               description: 'The answer to the question'
             },
-            confidence: { 
+            confidence: {
               type: 'number',
               minimum: 0,
               maximum: 1,
               description: 'Confidence score of the answer (0-1)'
             },
-            sourceId: { 
+            sourceId: {
               type: 'string',
               description: 'ID of the source FAQ (if found)'
             },
-            timestamp: { 
+            timestamp: {
               type: 'string',
               format: 'date-time',
               description: 'ISO timestamp of when the answer was generated'
@@ -54,11 +54,11 @@ export async function answerRoutes(fastify: FastifyInstance) {
         400: {
           type: 'object',
           properties: {
-            error: { 
+            error: {
               type: 'string',
               description: 'Error type'
             },
-            message: { 
+            message: {
               type: 'string',
               description: 'Error message'
             },
@@ -78,11 +78,11 @@ export async function answerRoutes(fastify: FastifyInstance) {
         500: {
           type: 'object',
           properties: {
-            error: { 
+            error: {
               type: 'string',
               description: 'Error type'
             },
-            message: { 
+            message: {
               type: 'string',
               description: 'Error message'
             }
@@ -90,7 +90,7 @@ export async function answerRoutes(fastify: FastifyInstance) {
         }
       }
     }
-  }, postAnswer);
+  } as any, postAnswer);
 
   // GET /answer/stream - Server-Sent Events streaming answer
   fastify.get('/answer/stream', {
@@ -124,11 +124,11 @@ export async function answerRoutes(fastify: FastifyInstance) {
         400: {
           type: 'object',
           properties: {
-            error: { 
+            error: {
               type: 'string',
               description: 'Error type'
             },
-            message: { 
+            message: {
               type: 'string',
               description: 'Error message'
             },
@@ -147,5 +147,5 @@ export async function answerRoutes(fastify: FastifyInstance) {
         }
       }
     }
-  }, streamAnswer);
+  } as any, streamAnswer);
 }
