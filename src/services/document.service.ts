@@ -12,10 +12,15 @@ import { upsert } from '../memory/store.js';
 import { localLLM } from '../ai/localLLM.js';
 import { createRequire } from 'module';
 
-const require = createRequire(import.meta.url);
-const pdfParse = require('pdf-parse');
-const mammoth = require('mammoth');
-const PDFExtract = require('pdf.js-extract').PDFExtract;
+// Lokales require umbenennen, damit es nicht mit dem globalen Namen kollidiert
+const moduleRequire = createRequire(import.meta.url);
+
+// Abhängigkeiten mit moduleRequire laden
+const pdfParse = (await import('pdf-parse')).default;
+const mammoth = (await import('mammoth')).default;
+const { PDFExtract } = await import('pdf.js-extract');
+
+
 
 // Document storage paths
 const DOCS_DIR = path.join(process.cwd(), 'data', 'documents');
