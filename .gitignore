@@ -36,3 +36,25 @@ coverage/
 # OS
 .DS_Store
 Thumbs.db
+
+# Data files (runtime data, should not be versioned)
+data/*.json
+data/*.ndjson
+data/documents/
+data/temp/
+data/.cache/
+
+# Evaluation data (test results)
+eval/*.json
+
+# User-specific data files
+src/data/*.json
+src/data/.cache/
+src/data/embeddings.json
+src/data/vector_index.json
+
+# Backup files
+*.backup
+*.backup_*
+
+
