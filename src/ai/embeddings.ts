@@ -20,8 +20,9 @@ env.allowLocalModels = true;
 env.cacheDir = path.resolve('src/data/.cache');
 
 // Increase timeout for slow connections (30 seconds)
-if (typeof env.remoteModelFetchTimeout === 'number') {
-  env.remoteModelFetchTimeout = 30000;
+const envAny = env as any;
+if (typeof envAny.remoteModelFetchTimeout === 'number') {
+  envAny.remoteModelFetchTimeout = 30_000;
 }
 
 interface EmbeddingCache {
