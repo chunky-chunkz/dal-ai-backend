@@ -1,4 +1,4 @@
-import { FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 import { HealthResponse } from '../models/faq.model.js';
 
 export default class HealthController {

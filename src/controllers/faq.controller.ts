@@ -1,4 +1,4 @@
-import { FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 import { faqsRepository } from '../repos/faqs.repo.js';
 
 // Simple functions for FAQ operations - no need for a class

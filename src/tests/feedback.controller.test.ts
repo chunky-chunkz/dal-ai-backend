@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 import { FeedbackController, FeedbackRequestBody } from '../controllers/feedback.controller.js';
 import { FeedbackRequest } from '../models/feedback.model.js';
 import { FeedbackRepository } from '../repos/feedback.repo.js';

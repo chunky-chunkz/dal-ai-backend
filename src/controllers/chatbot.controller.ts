@@ -1,4 +1,4 @@
-import { FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 import { ChatbotService } from '../services/chatbot.service.js';
 import { AnswerRequest, AnswerRequestSchema, AnswerResponse } from '../models/faq.model.js';
 

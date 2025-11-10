@@ -5,7 +5,7 @@
  * - Reset sliding window.
  */
 
-import { FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 
 interface RateLimitEntry {
   hits: number;

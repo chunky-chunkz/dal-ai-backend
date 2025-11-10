@@ -4,7 +4,7 @@
  * - Pass sessionId down to service so the memory can be updated per conversation.
  */
 
-import { FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { answerQuestion } from '../services/answer.service.js';
