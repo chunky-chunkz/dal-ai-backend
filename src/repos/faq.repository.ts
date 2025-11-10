@@ -1,11 +1,3 @@
-/**
- * Aufgabe: Repo für FAQs mit Validierung.
- * - loadAll(): faqs.json laden und gegen FaqArraySchema validieren.
- * - list(): gecachte Liste zurückgeben.
- * - getById(id): einzelnes FAQ holen.
- * - findByQuery(q): improved keyword search in title/question_variants.
- * - saveAll(faqs): komplett zurückschreiben (für spätere Admin-Tools).
- */
 import fs from 'fs/promises';
 import path from 'path';
 import { Faq, FaqArraySchema } from '../models/faq.model.js';
@@ -27,11 +19,11 @@ export class FaqRepository {
     try {
       const data = await fs.readFile(this.dataPath, 'utf-8');
       const parsed = JSON.parse(data);
-      
+
       // Validate against FaqArraySchema
       this.faqs = FaqArraySchema.parse(parsed);
       this.isLoaded = true;
-      
+
       return this.faqs;
     } catch (error) {
       console.error('Error loading FAQs:', error);
@@ -71,7 +63,7 @@ export class FaqRepository {
       .replace(/[?!.,;:]/g, '') // Remove punctuation
       .split(/\s+/)
       .filter(word => word.length > 2);
-    
+
     if (searchKeywords.length === 0) {
       return [];
     }
@@ -86,7 +78,7 @@ export class FaqRepository {
       // Check title matches
       const titleLower = faq.title.toLowerCase();
       const titleWords = titleLower.split(/\s+/);
-      
+
       searchKeywords.forEach(keyword => {
         // Exact word match in title gets high score
         if (titleWords.includes(keyword)) {
@@ -100,11 +92,11 @@ export class FaqRepository {
         }
       });
 
-      // Check question_variants matches  
+      // Check question_variants matches
       faq.question_variants.forEach(questionVariant => {
         const questionLower = questionVariant.toLowerCase().replace(/[?!.,;:]/g, '');
         const questionWords = questionLower.split(/\s+/);
-        
+
         searchKeywords.forEach(keyword => {
           // Exact word match in question variant gets high score
           if (questionWords.includes(keyword)) {
@@ -117,7 +109,7 @@ export class FaqRepository {
             hasMatch = true;
           }
         });
-        
+
         // Check for phrase similarity (if multiple keywords match in sequence)
         const queryNormalized = query.toLowerCase().replace(/[?!.,;:]/g, '');
         if (questionLower.includes(queryNormalized) || queryNormalized.includes(questionLower)) {
@@ -146,11 +138,11 @@ export class FaqRepository {
     try {
       // Validate the entire array before saving
       const validatedFaqs = FaqArraySchema.parse(faqs);
-      
+
       // Write to file with proper formatting
       const jsonData = JSON.stringify(validatedFaqs, null, 2);
       await fs.writeFile(this.dataPath, jsonData, 'utf-8');
-      
+
       // Update cached data
       this.faqs = validatedFaqs;
       this.isLoaded = true;
@@ -166,5 +158,34 @@ export class FaqRepository {
   clearCache(): void {
     this.faqs = [];
     this.isLoaded = false;
+  }
+
+  // Aliases required by tests / other code
+  /**
+   * Alias for loadAll()
+   */
+  async loadFaqs(): Promise<Faq[]> {
+    return this.loadAll();
+  }
+
+  /**
+   * Alias for list()
+   */
+  async getAllFaqs(): Promise<Faq[]> {
+    return this.list();
+  }
+
+  /**
+   * Alias for findByQuery()
+   */
+  async searchByKeywords(query: string): Promise<{ faq: Faq; confidence: number }[]> {
+    return this.findByQuery(query);
+  }
+
+  /**
+   * Alias for getById()
+   */
+  async findById(id: string): Promise<Faq | undefined> {
+    return this.getById(id);
   }
 }
