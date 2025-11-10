@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { HealthResponse } from '../models/faq.model.js';
 
-export class HealthController {
+export default class HealthController {
   /**
    * Health check endpoint
    */
@@ -17,4 +17,3 @@ export class HealthController {
   }
 }
 
-export default HealthController;
