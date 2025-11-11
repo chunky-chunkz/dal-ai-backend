@@ -67,16 +67,18 @@ export async function buildApp(): Promise<FastifyInstance> {
   });
 
   // Cookies
-  await app.register(cookie, {
-    secret: process.env.SESSION_SECRET || 'PLEASE_CHANGE_ME__32+_random_chars',
-    hook: 'onRequest',
-    parseOptions: {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 24 * 60 * 60 * 1000
-    }
-  });
+await app.register(cookie, {
+  secret: process.env.SESSION_SECRET || 'PLEASE_CHANGE_ME__32+_random_chars',
+  hook: 'onRequest',
+  parseOptions: {
+    httpOnly: true,
+    // In Produktionsumgebungen muss secure=true sein, sonst wird SameSite=None abgelehnt
+    secure: process.env.NODE_ENV === 'production',
+    // Für Cross‑Site‑Cookies in Produktion 'none' verwenden; lokal kann 'lax' bleiben
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 24 * 60 * 60 * 1000 // 24 Stunden
+  }
+});
 
   // Swagger + UI (jetzt korrekt nach Instanz-Erstellung)
   await app.register(fastifySwagger, {
