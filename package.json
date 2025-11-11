@@ -10,6 +10,8 @@
     "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "^11.1.0",
     "@fastify/helmet": "^13.0.2",
+    "@fastify/swagger": "^9.6.0",
+    "@fastify/swagger-ui": "^5.2.3",
     "@xenova/transformers": "^2.17.2",
     "abort-controller": "^3.0.0",
     "abstract-logging": "^2.0.1",
@@ -403,7 +405,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
-     "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json",
     "build:server": "tsc -p tsconfig.run.json"
   },
   "repository": {
