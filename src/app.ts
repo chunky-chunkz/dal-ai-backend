@@ -72,11 +72,9 @@ await app.register(cookie, {
   hook: 'onRequest',
   parseOptions: {
     httpOnly: true,
-    // In Produktionsumgebungen muss secure=true sein, sonst wird SameSite=None abgelehnt
-    secure: process.env.NODE_ENV === 'production',
-    // Für Cross‑Site‑Cookies in Produktion 'none' verwenden; lokal kann 'lax' bleiben
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 24 * 60 * 60 * 1000 // 24 Stunden
+    secure: true,                                 // immer Secure für SameSite=None
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' im Live-Betrieb
+    maxAge: 24 * 60 * 60 * 1000
   }
 });
 
