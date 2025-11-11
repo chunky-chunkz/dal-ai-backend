@@ -54,29 +54,30 @@ export async function buildApp(): Promise<FastifyInstance> {
     }
   });
 
-  // CORS (nutze nullish coalescing, nicht `||` mit Literalen)
-  const origin =
-    process.env.FRONTEND_ORIGIN ??
-    process.env.CORS_ORIGIN ??
-    'http://localhost:3000';
+  // CORS - allow origins from environment
+  const allowedOrigins: string[] = [];
+  if (process.env.FRONTEND_ORIGIN) allowedOrigins.push(process.env.FRONTEND_ORIGIN);
+  if (process.env.CORS_ORIGIN) allowedOrigins.push(process.env.CORS_ORIGIN);
+  if (allowedOrigins.length === 0) allowedOrigins.push('http://localhost:3000');
+  
   await app.register(cors, {
-    origin,
+    origin: allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Accept', 'x-session-id']
   });
 
-  // Cookies
-await app.register(cookie, {
-  secret: process.env.SESSION_SECRET || 'PLEASE_CHANGE_ME__32+_random_chars',
-  hook: 'onRequest',
-  parseOptions: {
-    httpOnly: true,
-    secure: true,                                 // immer Secure für SameSite=None
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' im Live-Betrieb
-    maxAge: 24 * 60 * 60 * 1000
-  }
-});
+  // Cookies - secure: true + sameSite: 'none' for cross-origin requests
+  await app.register(cookie, {
+    secret: process.env.SESSION_SECRET || 'PLEASE_CHANGE_ME__32+_random_chars',
+    hook: 'onRequest',
+    parseOptions: {
+      httpOnly: true,
+      secure: true,                   // always true on Render
+      sameSite: 'none',               // required for CORS cookies
+      maxAge: 24 * 60 * 60 * 1000     // 24h
+    }
+  });
 
   // Swagger + UI (jetzt korrekt nach Instanz-Erstellung)
   await app.register(fastifySwagger, {
