@@ -2,7 +2,8 @@ import { promises as fs } from 'fs';
 import { join } from 'path';
 import { randomBytes } from 'crypto';
 
-const DATA_DIR = join(process.cwd(), 'data');
+// Erst DATA_DIR aus Umgebungsvariable nehmen, sonst fallback auf ./data
+const DATA_DIR = process.env.DATA_DIR || join(process.cwd(), 'data');
 const USERS_FILE = join(DATA_DIR, 'users.json');
 
 export interface User {

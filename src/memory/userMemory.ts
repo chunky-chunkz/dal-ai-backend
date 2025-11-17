@@ -10,8 +10,11 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Basisverzeichnis für Daten: persistent Disk oder fallback auf altes Verhalten
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '../data');
+
 // Path to user memories storage
-const MEMORY_FILE = path.join(__dirname, '../data/user_memories.json');
+const MEMORY_FILE = path.join(DATA_DIR, 'user_memories.json');
 
 export interface UserMemory {
   userId: string;
@@ -47,6 +50,9 @@ async function loadMemories(): Promise<MemoryDatabase> {
  */
 async function saveMemories(memories: MemoryDatabase): Promise<void> {
   try {
+    // Ordner anlegen, falls nicht vorhanden
+    await fs.mkdir(path.dirname(MEMORY_FILE), { recursive: true });
+
     await fs.writeFile(MEMORY_FILE, JSON.stringify(memories, null, 2));
   } catch (error) {
     console.error('❌ Error saving user memories:', error);
