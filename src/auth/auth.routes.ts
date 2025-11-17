@@ -216,6 +216,11 @@ export async function authRoutes(fastify: FastifyInstance) {
    */
   fastify.get('/me', async (request, reply) => {
     try {
+      const sid = request.cookies.sid;
+      if (!sid) {
+        return reply.status(401).send({ error: 'Not authenticated' });
+      }
+      
       const session = getSession(request);
       
       if (!session.sid) {
@@ -225,13 +230,12 @@ export async function authRoutes(fastify: FastifyInstance) {
       const sessionData = getSessionData(session.sid);
       
       if (!sessionData?.user) {
-        return reply.status(401).send({ error: 'No user data found' });
+        return reply.status(401).send({ error: 'Not authenticated' });
       }
       
       return reply.send({
-        user: sessionData.user,
-        authenticated: true,
-        provider: (sessionData as any).authProvider || 'unknown'
+        ok: true,
+        user: sessionData.user
       });
       
     } catch (error) {
