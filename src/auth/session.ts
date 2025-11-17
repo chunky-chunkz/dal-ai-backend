@@ -38,6 +38,7 @@ const COOKIE_NAME = 'sid';
 const SESSION_SECRET = process.env.SESSION_SECRET || 'change_me_to_a_secure_random_string';
 const SESSION_MAX_AGE = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || undefined;
 
 /**
  * Generate a secure session ID
@@ -96,7 +97,8 @@ export function createSession(res: FastifyReply, userId: string): string {
   res.setCookie(COOKIE_NAME, signedSessionId, {
     httpOnly: true,
     secure: IS_PRODUCTION,
-    sameSite: 'lax',
+    sameSite: IS_PRODUCTION ? 'none' : 'lax', // 'none' erlaubt das Senden über Subdomains
+    domain: COOKIE_DOMAIN,                    // Cookie für alle Subdomains setzen
     maxAge: SESSION_MAX_AGE,
     path: '/',
   });
@@ -200,7 +202,8 @@ export function destroySession(res: FastifyReply, sid?: string): void {
   res.clearCookie(COOKIE_NAME, {
     httpOnly: true,
     secure: IS_PRODUCTION,
-    sameSite: 'lax',
+    sameSite: IS_PRODUCTION ? 'none' : 'lax',
+    domain: COOKIE_DOMAIN,
     path: '/',
   });
 }
