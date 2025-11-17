@@ -37,8 +37,12 @@ const sessions: Map<string, SessionData> = new Map();
 const COOKIE_NAME = 'sid';
 const SESSION_SECRET = process.env.SESSION_SECRET || 'change_me_to_a_secure_random_string';
 const SESSION_MAX_AGE = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-const IS_PRODUCTION = process.env.NODE_ENV === 'production';
-const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || undefined;
+
+// Für Render: beide Apps liegen auf *.onrender.com
+const COOKIE_DOMAIN = '.onrender.com';
+
+// Wir tun so, als wären wir immer "production" für die Cookie-Einstellungen
+const IS_PRODUCTION = true;
 
 /**
  * Generate a secure session ID
@@ -96,9 +100,9 @@ export function createSession(res: FastifyReply, userId: string): string {
   // Set secure cookie
   res.setCookie(COOKIE_NAME, signedSessionId, {
     httpOnly: true,
-    secure: IS_PRODUCTION,
-    sameSite: IS_PRODUCTION ? 'none' : 'lax', // 'none' erlaubt das Senden über Subdomains
-    domain: COOKIE_DOMAIN,                    // Cookie für alle Subdomains setzen
+    secure: true,        // immer HTTPS-Cookie
+    sameSite: 'none',    // erlaubt Cross-Site (Frontend ↔ Backend)
+    domain: COOKIE_DOMAIN,
     maxAge: SESSION_MAX_AGE,
     path: '/',
   });
@@ -201,8 +205,8 @@ export function destroySession(res: FastifyReply, sid?: string): void {
   
   res.clearCookie(COOKIE_NAME, {
     httpOnly: true,
-    secure: IS_PRODUCTION,
-    sameSite: IS_PRODUCTION ? 'none' : 'lax',
+    secure: true,
+    sameSite: 'none',
     domain: COOKIE_DOMAIN,
     path: '/',
   });
