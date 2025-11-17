@@ -127,7 +127,8 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   // Routes
   await app.register(healthRoutes); // /health
-  await app.register(registerLocalAuthRoutes, { prefix: '/api/auth' }); // local auth
+  await app.register(registerLocalAuthRoutes, { prefix: '/api/auth' }); // local auth (unter /api/auth/*)
+  await app.register(registerLocalAuthRoutes, { prefix: '/auth' });     // local auth (auch unter /auth/*)
   await app.register(authRoutes, { prefix: '/auth' });                  // MS OAuth
   await app.register(registerUserRoutes, { prefix: '/api' });           // protected /api/*
   await app.register(feedbackRoutes);
