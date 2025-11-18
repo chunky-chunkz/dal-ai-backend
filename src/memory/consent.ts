@@ -8,7 +8,9 @@
 import fs from 'fs/promises';
 import path from 'path';
 
-const CONSENT_STORE_PATH = path.join(process.cwd(), 'data', 'consent.json');
+// Persistent disk on Render oder fallback auf ./data
+const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'data');
+const CONSENT_STORE_PATH = path.join(DATA_DIR, 'consent.json');
 const BLACKLIST_DURATION_HOURS = 24;
 
 export interface ConsentRecord {

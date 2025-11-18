@@ -555,7 +555,8 @@ export async function memoryRoutes(fastify: FastifyInstance) {
       // Read user_memories.json directly
       const fs = await import('fs/promises');
       const path = await import('path');
-      const userMemoriesPath = path.join(process.cwd(), 'data', 'user_memories.json');
+      const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'data');
+      const userMemoriesPath = path.join(DATA_DIR, 'user_memories.json');
       
       let allUserMemories: any[] = [];
       

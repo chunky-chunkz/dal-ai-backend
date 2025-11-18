@@ -23,7 +23,9 @@ interface ProfileData {
 }
 
 // Path to profiles data file  
-const PROFILES_FILE = path.join(process.cwd(), 'data', 'profiles.json');
+// Persistent disk on Render oder fallback auf ./data
+const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'data');
+const PROFILES_FILE = path.join(DATA_DIR, 'profiles.json');
 
 // In-memory cache for performance
 let profileCache: ProfileData | null = null;

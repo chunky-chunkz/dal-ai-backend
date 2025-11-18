@@ -12,7 +12,8 @@ import { summarizeUserMemories, type SummarizationStats } from '../memory/summar
 import { promises as fs } from 'fs';
 import { join } from 'path';
 
-const DATA_DIR = join(process.cwd(), 'data');
+// Persistent disk on Render oder fallback auf ./data
+const DATA_DIR = process.env.DATA_DIR || join(process.cwd(), 'data');
 const USERS_FILE = join(DATA_DIR, 'users.json');
 
 interface User {

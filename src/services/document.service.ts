@@ -22,9 +22,10 @@ const { PDFExtract } = await import('pdf.js-extract');
 
 
 
-// Document storage paths
-const DOCS_DIR = path.join(process.cwd(), 'data', 'documents');
-const DOCS_INDEX_PATH = path.join(process.cwd(), 'data', 'docs_index.json');
+// Document storage paths - use persistent disk on Render
+const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'data');
+const DOCS_DIR = path.join(DATA_DIR, 'documents');
+const DOCS_INDEX_PATH = path.join(DATA_DIR, 'docs_index.json');
 
 // Document interfaces
 export interface DocumentChunk {

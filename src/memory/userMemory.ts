@@ -5,13 +5,9 @@
 
 import fs from 'fs/promises';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Basisverzeichnis für Daten: persistent Disk oder fallback auf altes Verhalten
-const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '../data');
+// Basisverzeichnis für Daten: persistent Disk oder fallback auf ./data
+const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'data');
 
 // Path to user memories storage
 const MEMORY_FILE = path.join(DATA_DIR, 'user_memories.json');

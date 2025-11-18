@@ -7,7 +7,9 @@
 import fs from 'fs/promises';
 import path from 'path';
 
-const METRICS_FILE_PATH = path.join(process.cwd(), 'data', 'memory_metrics.json');
+// Persistent disk on Render oder fallback auf ./data
+const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'data');
+const METRICS_FILE_PATH = path.join(DATA_DIR, 'memory_metrics.json');
 
 export interface MemoryEvent {
   userId: string;

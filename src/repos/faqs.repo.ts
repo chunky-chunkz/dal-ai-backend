@@ -14,8 +14,9 @@ export class FaqsRepository {
   private readonly dataPath: string;
 
   constructor() {
-    // Path to data/faqs.json
-    this.dataPath = path.join(process.cwd(), 'data', 'faqs.json');
+    // Path to data/faqs.json - use persistent disk on Render
+    const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'data');
+    this.dataPath = path.join(DATA_DIR, 'faqs.json');
     this.loadFaqs();
   }
 

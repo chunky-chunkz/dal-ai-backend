@@ -17,8 +17,9 @@ export class FeedbackRepository {
   private readonly feedbackFilePath: string;
 
   constructor() {
-    // Path to the feedback NDJSON file
-    this.feedbackFilePath = join(process.cwd(), 'data', 'feedback.ndjson');
+    // Path to the feedback NDJSON file - use persistent disk on Render
+    const DATA_DIR = process.env.DATA_DIR || join(process.cwd(), 'data');
+    this.feedbackFilePath = join(DATA_DIR, 'feedback.ndjson');
   }
 
   /**
@@ -201,7 +202,7 @@ export class FeedbackRepository {
    * @returns Promise<void>
    */
   private async ensureDataDirectory(): Promise<void> {
-    const dataDir = join(process.cwd(), 'data');
+    const dataDir = process.env.DATA_DIR || join(process.cwd(), 'data');
     try {
       await fs.mkdir(dataDir, { recursive: true });
     } catch (error) {

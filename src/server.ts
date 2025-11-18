@@ -11,6 +11,10 @@ import { buildApp } from './app.js';
 import pino from 'pino';
 
 import { startMemoryCleanupJob } from './jobs/memory-cleanup.js';
+import { ensureDataDir } from './utils/ensureDataDir.js';
+
+// Ensure data directory exists before starting server
+ensureDataDir();
 
 const PORT = parseInt(process.env.PORT || '4000', 10);
 const HOST = process.env.HOST || '0.0.0.0';
