@@ -26,14 +26,7 @@ export async function answerRoutes(fastify: FastifyInstance) {
         },
       },
     },
-  }, async (request, reply) => {
-    const { question } = request.body as { question: string };
-
-    // 🔧 Test-Implementierung ohne LLM:
-    const answer = `Echo vom Server: ${question}`;
-
-    return reply.send({ answer });
-  });
+  }, postAnswer);
 
   // GET /answer/stream - Server-Sent Events streaming answer
   fastify.get('/answer/stream', {
