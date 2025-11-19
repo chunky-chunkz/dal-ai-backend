@@ -58,7 +58,13 @@ export async function buildApp(): Promise<FastifyInstance> {
   const allowedOrigins: string[] = [];
   if (process.env.FRONTEND_ORIGIN) allowedOrigins.push(process.env.FRONTEND_ORIGIN);
   if (process.env.CORS_ORIGIN) allowedOrigins.push(process.env.CORS_ORIGIN);
-  if (allowedOrigins.length === 0) allowedOrigins.push('http://localhost:3000');
+  // Allow local dev origins if no production origins configured
+  if (allowedOrigins.length === 0) {
+    allowedOrigins.push('http://localhost:3000');
+    allowedOrigins.push('http://localhost:5173');
+  }
+  
+  console.log('🌐 CORS enabled for origins:', allowedOrigins);
   
   await app.register(cors, {
     origin: allowedOrigins,
