@@ -1,8 +1,8 @@
 /**
  * Task: Create Ollama client wrapper for local LLM (Phi-3 Mini).
  * Requirements:
- * - Use 'ollama' npm package.
- * - Read OLLAMA_URL from process.env (default http://127.0.0.1:11434).
+ * - Use direct fetch to Ollama API for ngrok compatibility.
+ * - Read OLLAMA_BASE_URL from process.env (default http://127.0.0.1:11434).
  * - Export localLLM.generate({ model, prompt, system?, temperature?, maxTokens? }):
  *    - Call Ollama chat API (messages: optional system + user).
  *    - Defaults: temperature=0.2, maxTokens=220.
@@ -12,8 +12,6 @@
  *    - Return full concatenated text at the end.
  * - Handle errors with meaningful messages; never throw raw stack to caller.
  */
-
-import { Ollama } from 'ollama';
 
 interface GenerateOptions {
   model: string;
@@ -30,11 +28,25 @@ interface StreamOptions extends GenerateOptions {
 }
 
 class LocalLLM {
-  private client: Ollama;
+  private baseUrl: string;
 
   constructor() {
-    const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
-    this.client = new Ollama({ host: ollamaUrl });
+    this.baseUrl = process.env.OLLAMA_BASE_URL || process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
+  }
+
+  /**
+   * Get fetch options with ngrok headers for compatibility
+   */
+  private getFetchOptions(method: string = 'GET', body?: any): RequestInit {
+    return {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    };
   }
 
   /**
@@ -67,22 +79,35 @@ class LocalLLM {
       messages.push({ role: 'user', content: prompt });
 
       // Make the API call
-      const response = await this.client.chat({
-        model,
-        messages,
-        options: {
-          temperature,
-          num_predict: maxTokens,
-        },
-      });
+      const response = await fetch(
+        `${this.baseUrl}/api/chat?ngrok-skip-browser-warning=1`,
+        {
+          ...this.getFetchOptions('POST', {
+            model,
+            messages,
+            stream: false,
+            options: {
+              temperature,
+              num_predict: maxTokens,
+            },
+          }),
+          signal,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Ollama API error: ${response.status} ${response.statusText}`);
+      }
 
       // Check for abort signal after response
       if (signal?.aborted) {
         throw new Error('Request was aborted');
       }
 
+      const data = await response.json();
+
       // Extract and return the content
-      const content = response.message?.content;
+      const content = data.message?.content;
       if (typeof content !== 'string') {
         throw new Error('Invalid response format from Ollama');
       }
@@ -97,7 +122,7 @@ class LocalLLM {
 
       // Handle errors with meaningful messages
       if (error instanceof Error) {
-        if (error.message.includes('connect')) {
+        if (error.message.includes('connect') || error.message.includes('fetch')) {
           throw new Error('Unable to connect to Ollama service. Please ensure Ollama is running.');
         }
         if (error.message.includes('model')) {
@@ -142,27 +167,60 @@ class LocalLLM {
       let fullResponse = '';
 
       // Make the streaming API call
-      const response = await this.client.chat({
-        model,
-        messages,
-        stream: true,
-        options: {
-          temperature,
-          num_predict: maxTokens,
-        },
-      });
+      const response = await fetch(
+        `${this.baseUrl}/api/chat?ngrok-skip-browser-warning=1`,
+        {
+          ...this.getFetchOptions('POST', {
+            model,
+            messages,
+            stream: true,
+            options: {
+              temperature,
+              num_predict: maxTokens,
+            },
+          }),
+          signal,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Ollama API error: ${response.status} ${response.statusText}`);
+      }
+
+      if (!response.body) {
+        throw new Error('Response body is null');
+      }
 
       // Process the streaming response
-      for await (const part of response) {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
         // Check for abort signal during streaming
         if (signal?.aborted) {
+          reader.cancel();
           throw new Error('Request was aborted');
         }
 
-        const chunk = part.message?.content || '';
-        if (chunk) {
-          fullResponse += chunk;
-          onToken(chunk);
+        const { done, value } = await reader.read();
+        
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n').filter(line => line.trim());
+
+        for (const line of lines) {
+          try {
+            const data = JSON.parse(line);
+            const content = data.message?.content || '';
+            
+            if (content) {
+              fullResponse += content;
+              onToken(content);
+            }
+          } catch {
+            // Skip invalid JSON lines
+          }
         }
       }
 
@@ -176,7 +234,7 @@ class LocalLLM {
 
       // Handle errors with meaningful messages
       if (error instanceof Error) {
-        if (error.message.includes('connect')) {
+        if (error.message.includes('connect') || error.message.includes('fetch')) {
           throw new Error('Unable to connect to Ollama service. Please ensure Ollama is running.');
         }
         if (error.message.includes('model')) {
@@ -195,8 +253,17 @@ class LocalLLM {
    */
   async isModelAvailable(model: string): Promise<boolean> {
     try {
-      const models = await this.client.list();
-      return models.models.some((m) => m.name === model);
+      const response = await fetch(
+        `${this.baseUrl}/api/tags?ngrok-skip-browser-warning=1`,
+        this.getFetchOptions('GET')
+      );
+      
+      if (!response.ok) {
+        return false;
+      }
+
+      const data = await response.json();
+      return data.models?.some((m: any) => m.name === model) || false;
     } catch {
       return false;
     }
@@ -208,8 +275,17 @@ class LocalLLM {
    */
   async listModels(): Promise<string[]> {
     try {
-      const models = await this.client.list();
-      return models.models.map((m) => m.name);
+      const response = await fetch(
+        `${this.baseUrl}/api/tags?ngrok-skip-browser-warning=1`,
+        this.getFetchOptions('GET')
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch models: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.models?.map((m: any) => m.name) || [];
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`Failed to list models: ${error.message}`);
