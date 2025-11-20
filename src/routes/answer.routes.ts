@@ -1,12 +1,18 @@
 import { FastifyInstance } from 'fastify';
-import { postAnswer, streamAnswer } from '../controllers/answer.controller.js';
+import { streamAnswer } from '../controllers/answer.controller.js';
 import { optionalAuth } from '../middleware/authGuard.js';
+import { ChatbotController } from '../controllers/chatbot.controller.js';
+
+const chatbotController = new ChatbotController();
 
 /**
- * Route registrieren für POST /api/answer -> Controller
+ * Route registrieren für POST /api/answer -> ChatbotController
  * Prefix kommt in app.ts via /api
  */
 export async function answerRoutes(fastify: FastifyInstance) {
+  // Initialize the chatbot controller
+  await chatbotController.initialize();
+
   // POST /answer (wird zu /api/answer durch app-level prefix)
   fastify.post('/answer', {
     preHandler: optionalAuth,
@@ -26,9 +32,10 @@ export async function answerRoutes(fastify: FastifyInstance) {
         },
       },
     },
-  }, postAnswer);
+  }, chatbotController.getAnswer.bind(chatbotController));
 
   // GET /answer/stream - Server-Sent Events streaming answer
+  // TODO: Stream-Route kann später auch proxied werden
   fastify.get('/answer/stream', {
     preHandler: optionalAuth,
     schema: {

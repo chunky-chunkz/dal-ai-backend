@@ -1,7 +1,7 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { AnswerRequest, AnswerRequestSchema, AnswerResponse } from '../models/faq.model.js';
 
-// Upstream-URL zu deinem SSH-Server (über ngrok)
+// Upstream-URL zu deinem SSH-Server (übers ngrok)
 const UPSTREAM_URL =
   process.env.LLM_SERVER_URL ??
   'https://jonas-clearstoried-implicitly.ngrok-free.dev';
