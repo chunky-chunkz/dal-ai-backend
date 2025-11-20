@@ -54,24 +54,21 @@ export async function buildApp(): Promise<FastifyInstance> {
     }
   });
 
-  // CORS - allow origins from environment
-  const allowedOrigins: string[] = [];
-  if (process.env.FRONTEND_ORIGIN) allowedOrigins.push(process.env.FRONTEND_ORIGIN);
-  if (process.env.CORS_ORIGIN) allowedOrigins.push(process.env.CORS_ORIGIN);
-  // Allow local dev origins if no production origins configured
-  if (allowedOrigins.length === 0) {
-    allowedOrigins.push('http://localhost:3000');
-    allowedOrigins.push('http://localhost:5173');
-  }
-  
-  console.log('🌐 CORS enabled for origins:', allowedOrigins);
-  
+  // CORS – zum Debuggen erstmal alles erlauben + Cookies
   await app.register(cors, {
-    origin: allowedOrigins,
+    origin: true, // spiegelt einfach das Origin zurück (egal welche URL)
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Accept', 'x-session-id']
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Cache-Control',
+      'Accept',
+      'x-session-id',
+    ],
   });
+
+  console.log('🌐 CORS enabled in debug mode (origin: true)');
 
   // Cookies - secure: true + sameSite: 'none' for cross-origin requests
   await app.register(cookie, {
